@@ -1,6 +1,7 @@
 import pandas as pd
 from src.utils.feature_engineering.creation import FeatureCreationUtils
 from tqdm import tqdm
+from typing import List, Tuple
 
 
 
@@ -20,6 +21,7 @@ class TimeSeriesProcessor:
         level: int = 3,
         num_imfs: int = 5,
         order: int = 4,
+        frequency_bands: dict = None
     ) -> pd.DataFrame:
         """Process a time series DataFrame to extract specified features.
 
@@ -65,8 +67,9 @@ class TimeSeriesProcessor:
         'wpd': lambda data: FeatureCreationUtils.wavelet_packet_decomposition(
             data=data, w=wavelet, level=level
         ),
-        'filter': lambda data: FeatureCreationUtils.filter_features(
-            data=data, fs=self.__sampling_rate, order=order
+        'filter': lambda data, axis: FeatureCreationUtils.filter_features(
+            data=data, fs=self.__sampling_rate, order=order, 
+            frequency_bands=axis
         ),
         'jerk': lambda data: FeatureCreationUtils.calculate_jerk(
             data=data, fs=self.__sampling_rate
@@ -90,9 +93,15 @@ class TimeSeriesProcessor:
                 raise ValueError("Missing axis columns in the data.")
             
             # Apply the selected feature function to each axis
-            features_X = feature_function(group['X_axis'])
-            features_Y = feature_function(group['Y_axis'])
-            features_Z = feature_function(group['Z_axis'])
+            if feature_type == 'filter':
+                features_X = feature_function(group['X_axis'], frequency_bands['X_axis'])
+                features_Y = feature_function(group['Y_axis'], frequency_bands['Y_axis'])
+                features_Z = feature_function(group['Z_axis'], frequency_bands['Z_axis'])
+            else:
+                features_X = feature_function(group['X_axis'])
+                features_Y = feature_function(group['Y_axis'])
+                features_Z = feature_function(group['Z_axis'])
+
             
             # Prefix columns to identify axis source
             features_X.columns = [f'X_{col}' for col in features_X.columns]

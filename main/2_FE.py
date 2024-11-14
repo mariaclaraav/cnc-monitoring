@@ -14,6 +14,7 @@ print(f"Current directory: {current_dir}")
 # Import the TimeSeriesProcessor and CustomProcessor classes
 from src.features.build_features import TimeSeriesProcessor
 from src.features.custom_processor import CustomProcessor
+from src.features.frequency_analyzer import FrequencyAnalyzer
 
 # Clear terminal output
 os.system('cls')
@@ -33,8 +34,8 @@ sys.path.append(CURRENT_DIR)
 SAVING_PATH = os.path.join(CURRENT_DIR, 'data', 'processed', 'features')
 DATA_PATH = os.path.join(CURRENT_DIR, 'data', 'processed', 'ETL', 'ETL_final.parquet')
 
-OPERATIONS = ['OP06']
-FEATURE_TYPES = ['filter', 'wpd', 'dwt']
+OPERATIONS = ['OP01', 'OP02', 'OP03', 'OPO4', 'OP05', 'OP06']
+FEATURE_TYPES = ['filter', 'wpd', 'dwt','emd']
 WINDOW_SIZE = 1000
 SAMPLING_RATE = 2000
 STEP_SIZE = 1

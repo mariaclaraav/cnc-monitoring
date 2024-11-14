@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pywt
 import emd
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Tuple
 from scipy.signal import butter, filtfilt
 
 class FeatureCreationUtils:
@@ -198,8 +198,7 @@ class FeatureCreationUtils:
     @staticmethod
     def filter_features(
         data: pd.Series, 
-        lowcut: List[float] = [240, 480, 560], 
-        highcut: List[float] = [250, 500, 580], 
+        frequency_bands: List[Tuple[float, float]] = [(240, 250), (480, 500), (560, 580)],  
         fs: int = 2000, 
         order: int = 4
     ) -> pd.DataFrame:
@@ -207,28 +206,22 @@ class FeatureCreationUtils:
 
         Args:
             data (pd.Series): The time series data to filter.
-            lowcut (List[float], optional): List of lower cutoff frequencies for each band. Defaults to [240, 480, 560].
-            highcut (List[float], optional): List of upper cutoff frequencies for each band. Defaults to [250, 500, 580].
+            frequency_bands (List[Tuple[float, float]], optional): List of tuples with (lowcut, highcut) frequencies for each band.
             fs (int, optional): Sampling rate of the data. Defaults to 2000.
             order (int, optional): Order of the filter. Defaults to 4.
 
         Returns:
             pd.DataFrame: DataFrame with columns for each filtered frequency band.
-        """
-        if len(lowcut) != len(highcut):
-            raise ValueError("lowcut and highcut must have the same length.")
-        
-        # Apply filters for each frequency band and store the results
+        """       
         filtered_signals = {
-            f'{low}-{high}Hz': FeatureCreationUtils.bandpass_filter(data.values, low, high, fs, order)
-            for low, high in zip(lowcut, highcut)
-        }
+        f'{low}-{high}Hz': FeatureCreationUtils.bandpass_filter(data.values, low, high, fs, order)
+        for low, high in frequency_bands
+    }
         
         # Convert filtered results to DataFrame
-        df_final = pd.DataFrame(filtered_signals)
-        
+        df_filtered = pd.DataFrame(filtered_signals)
+        df_final = pd.concat([data.reset_index(drop=True), df_filtered], axis=1)
         del filtered_signals  # Free memory
-        print(df_final.shape)
         return df_final
 
     @staticmethod
@@ -280,7 +273,6 @@ class FeatureCreationUtils:
 
         df_final = pd.concat([data.reset_index(drop=True), df_coef], axis=1)
         df_final.columns = [data.name] + [f'D{i}' for i in range(1, len(df_coef.columns))] + [df_ca.columns[-1]]
-        print(df_final.shape)
         return df_final
 
     @staticmethod
@@ -328,7 +320,6 @@ class FeatureCreationUtils:
         df_final.columns = [data.name] + df_coef.columns.tolist()
         
         del df_coef
-        print(df_final.shape)
         return df_final
     
     @staticmethod
@@ -390,5 +381,4 @@ class FeatureCreationUtils:
         
         # Create DataFrame from combined data
         df_final = pd.DataFrame(combined, columns=columns)
-        print(df_final.shape)
         return df_final

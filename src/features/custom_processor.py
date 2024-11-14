@@ -1,6 +1,10 @@
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 import pandas as pd
+from src.features.frequency_analyzer import FrequencyAnalyzer
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class CustomProcessor:
     """Class to filter and process time series data."""
@@ -55,23 +59,35 @@ class CustomProcessor:
             List[pd.DataFrame]: List of processed DataFrames.
         """
         
+        frequency_by_axis = {}           
         processed_data = {}
         for feature_type in feature_types:
             self.logger.info(f"Calculating {feature_type} data...")
             
             if feature_type in ['dwt', 'wpd']:
                 data = self.processor.process_time_series(df = df_filtered, feature_type=feature_type, wavelet='db14', level=3)
+                
             elif feature_type == 'filter':
-                print('here')
-                data = self.processor.process_time_series(df = df_filtered, feature_type=feature_type, order=4)
+                
+                for col in ['X_axis', 'Y_axis', 'Z_axis']:
+                    analyzer = FrequencyAnalyzer(
+                    df=df_filtered,
+                    column=col,
+                    sampling_rate=2000,
+                    height_thresh=0.05,
+                    plot = False)
+                    frequency_by_axis[col] = analyzer.run_analysis(bin_width_refined=1, top_n_initial=10)
+                logger.info("Frequency by axis", frequency_by_axis)
+                    
+                data = self.processor.process_time_series(df = df_filtered, feature_type=feature_type, order=4, frequency_bands=frequency_by_axis)
+                
             elif feature_type == 'emd':
                 data = self.processor.process_time_series(df = df_filtered, feature_type=feature_type, num_imfs=5)
             else:
                 data = self.processor.process_time_series(df = df_filtered, feature_type=feature_type)
         
             data.reset_index(drop=True, inplace=True)
-            print(f"Processed {feature_type} data shape:{data.shape}\n")
-            print(data)
+            logger.info(f"Processed {feature_type} data shape:{data.shape}\n")
             processed_data[feature_type] = data
             
         del df_filtered  
@@ -91,8 +107,6 @@ class CustomProcessor:
         """
         self.logger.info("Merging processed data...")
         merged_data = list(processed_data.values())[0]
-        print("Initial merged_data shape:", merged_data.shape)
-        print("Initial merged_data columns:", merged_data.columns)
 
         # Columns to drop before merging
         columns_to_drop = [
@@ -101,32 +115,26 @@ class CustomProcessor:
         ]
 
         for i, data in enumerate(list(processed_data.values())[1:], start=2):
-            print(f"\nProcessing DataFrame {i} for merge...")
-            print("Original data shape:", data.shape)
+            logger.info(f"\nProcessing DataFrame {i} for merge...")
             
             # Dropping specified columns from the data
             data = data.drop(columns=columns_to_drop, errors='ignore')
-            print("Data shape after dropping columns:", data.shape)
-            print("Data columns after dropping:", data.columns)
 
             # Checking for key column consistency
             if 'Unique_Code' not in data.columns or 'Time' not in data.columns:
-                print("Warning: 'Unique_Code' or 'Time' columns missing in DataFrame", i)
+                logger.info("Warning: 'Unique_Code' or 'Time' columns missing in DataFrame", i)
                 continue
 
             # Performing the merge
             try:
                 merged_data = merged_data.merge(data, on=['Unique_Code', 'Time'], how='inner')
-                print(f"Merged data shape after merging DataFrame {i}:", merged_data.shape)
             except Exception as e:
-                print(f"Error during merging DataFrame {i}: {e}")
+                logger.info(f"Error during merging DataFrame {i}: {e}")
                 break
             
             del data  # Freeing up memory
 
         del processed_data  # Freeing up memory after merging
-        print("Final merged_data shape:", merged_data.shape)
-        print("Final merged_data columns:", merged_data.columns)
         return merged_data
 
     def clean_final_dataframe(
