@@ -79,7 +79,7 @@ class ComparePeriods:
                 ks_stat, p_value = ks_2samp(data1, data2)
 
                 # Print the results
-                print(f'Comparing Period {period1} and {period2}: KS Statistic={np.round(ks_stat, 3)}, p-value={np.round(p_value, 3)}')
+                print(f'Comparing Period {period1} and {period2}: KS Statistic={np.round(ks_stat, 3)}, p-value={np.round(p_value, 5)}')
 
     def scatter_plot(self, cols=['X_axis', 'Y_axis', 'Z_axis'], downsample_factor=1):
         """

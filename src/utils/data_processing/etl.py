@@ -1,4 +1,26 @@
+import logging
 import pandas as pd
+
+logger = logging.getLogger() 
+
+def load_data(data_path: str) -> pd.DataFrame:
+    """
+    Load data from a parquet file.
+    
+    Args:
+        data_path (str): Path to the parquet file.
+        
+    Returns:
+        pd.DataFrame: Loaded DataFrame.
+    """
+    logger.info(f"Attempting to load data from {data_path}...")
+    try:
+        df = pd.read_parquet(data_path)
+        logger.info(f"Data successfully loaded. Shape: {df.shape}")
+        return df
+    except FileNotFoundError:
+        logger.error(f"File not found at {data_path}. Please verify the path.")
+        raise
 
 # Function to filter the data
 def filter_time_group(group):
