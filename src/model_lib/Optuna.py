@@ -11,7 +11,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 
 # Custom model import
-from src.models.VanillaAE import VanillaAE
+from src.model_lib.VanillaAE import VanillaAE
 
 # COPPIED FROM SOURCE CODE: https://optuna.readthedocs.io/en/v2.0.0/_modules/optuna/integration/pytorch_lightning.html
 

@@ -7,7 +7,8 @@ class DataSaver:
     def __init__(self, output_dir: str,
                  train_dfs: List[pd.DataFrame], 
                         val_dfs: Optional[List[pd.DataFrame]] = None, 
-                        test_dfs: Optional[List[pd.DataFrame]] = None):
+                        test_dfs: Optional[List[pd.DataFrame]] = None,
+                        group: int= None):
         """
         Initialize the DataSaver with an output directory for saving DataFrames.
 
@@ -20,6 +21,7 @@ class DataSaver:
         self.__train_dfs = train_dfs
         self.__val_dfs = val_dfs
         self.__test_dfs = test_dfs
+        self.__group = group
         self.logger = logging.getLogger(__name__)
 
         # Ensure the output directory exists
@@ -43,24 +45,24 @@ class DataSaver:
         """
         # Concatenate and save the final training DataFrame
         final_train_df = pd.concat(self.__train_dfs, ignore_index=True)
-        final_train_df.to_parquet(os.path.join(self.__output_dir, 'final_val.parquet'))
-        self.logger.info(f"Final train DataFrame saved to {os.path.join(self.__output_dir, 'final_val.parquet')}")
+        final_train_df.to_parquet(os.path.join(self.__output_dir, f'final_val_{self.__group}.parquet'))
+        self.logger.info(f"Final train DataFrame saved to {os.path.join(self.__output_dir, f'final_val_{self.__group}.parquet')}")
         del final_train_df
         self.__train_dfs = None  # Free up memory
 
         # Save the final validation DataFrame if it exists
         if self.__val_dfs:
             final_val_df = pd.concat(self.__val_dfs, ignore_index=True)
-            final_val_df.to_parquet(os.path.join(self.__output_dir, 'final_train.parquet'))
-            self.logger.info(f"Final validation DataFrame saved to {os.path.join(self.__output_dir, 'final_train.parquet')}")
+            final_val_df.to_parquet(os.path.join(self.__output_dir, f'final_train_{self.__group}.parquet'))
+            self.logger.info(f"Final validation DataFrame saved to {os.path.join(self.__output_dir, f'final_train_{self.__group}.parquet')}")
             del final_val_df
             self.__val_dfs = None  # Free up memory
 
         # Save the final test DataFrame if it exists
         if self.__test_dfs:
             final_test_df = pd.concat(self.__test_dfs, ignore_index=True)
-            final_test_df.to_parquet(os.path.join(self.__output_dir, 'final_test.parquet'))
-            self.logger.info(f"Final test DataFrame saved to {os.path.join(self.__output_dir, 'final_test.parquet')}")
+            final_test_df.to_parquet(os.path.join(self.__output_dir, f'final_test_{self.__group}.parquet'))
+            self.logger.info(f"Final test DataFrame saved to {os.path.join(self.__output_dir, f'final_test_{self.__group}.parquet')}")
             del final_test_df
             self.__test_dfs = None  # Free up memory
             

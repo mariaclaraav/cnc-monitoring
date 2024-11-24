@@ -8,7 +8,6 @@ import torch.nn as nn
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
-from torchmetrics.functional import r2_score
 from torchsummary import summary
 from torch.utils.data import DataLoader
 from pytorch_lightning import Trainer
@@ -20,7 +19,6 @@ class VanillaAE(pl.LightningModule):
         self.learning_rate = learning_rate
         self.criterion = nn.MSELoss()
         self.training_outputs = []
-        self.training_r2_scores = []
 
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, dim1),
@@ -49,28 +47,21 @@ class VanillaAE(pl.LightningModule):
         inputs = batch
         outputs = self(inputs)
         loss = self.criterion(outputs, inputs)
-        r2 = r2_score(outputs, inputs)
         self.log('train_loss_step', loss, on_step=True, on_epoch=False, prog_bar=True)
         self.training_outputs.append(loss)
-        self.training_r2_scores.append(r2)
         return loss
 
     def validation_step(self, batch, batch_idx):
         inputs = batch
         outputs = self(inputs)
         loss = self.criterion(outputs, inputs)
-        r2 = r2_score(outputs, inputs)
-        self.log('val_r2', r2, on_step=False, on_epoch=True, prog_bar=True)
         self.log('val_loss', loss, on_step=False, on_epoch=True, prog_bar=True)
         return loss
 
     def on_train_epoch_end(self):
         avg_loss = torch.stack(self.training_outputs).mean()
-        avg_r2 = torch.stack(self.training_r2_scores).mean()
         self.log('train_loss_epoch', avg_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log('train_r2_epoch', avg_r2, on_step=False, on_epoch=True, prog_bar=True)
         self.training_outputs.clear()
-        self.training_r2_scores.clear()
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
@@ -390,7 +381,7 @@ def train_model(model, train_loader, val_loader, num_epochs, trainer_logger, cal
     )
     trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
     
-def create_dataloaders(X_train, X_val, X_test, BATCH_SIZE, NUM_WORKERS, logger):
+def create_dataloaders(X_train, X_val, X_test, BATCH_SIZE, NUM_WORKERS, logger, device):
     """
     Creates DataLoaders for training, validation, and test datasets.
 
@@ -406,6 +397,7 @@ def create_dataloaders(X_train, X_val, X_test, BATCH_SIZE, NUM_WORKERS, logger):
         tuple: A tuple containing three DataLoaders (train_loader, val_loader, test_loader).
     """
     logger.info('Creating DataLoaders...')
+    
     train_loader = DataLoader(
         torch.tensor(X_train, dtype=torch.float32),
         batch_size=BATCH_SIZE,

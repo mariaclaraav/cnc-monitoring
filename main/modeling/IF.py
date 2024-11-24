@@ -10,7 +10,7 @@ CURRENT_DIR = os.getcwd()
 sys.path.append(CURRENT_DIR)
 
 # Import project-specific modules
-from src.models.IsolationForest import AblationStudy
+from model_lib.AblationStudy import AblationStudy
 from utils.data_processing.splitting import DataProcessor
 
 style = os.path.join(CURRENT_DIR, 'src','utils','visualization','plot.mplstyle')

@@ -15,7 +15,7 @@ from optuna.samplers import TPESampler
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
-from src.models.anomaly_rate import sliding_window_anomalies, expand_anomaly_index_with_threshold
+from src.model_lib.anomaly_rate import sliding_window_anomalies, expand_anomaly_index_with_threshold
 
 
 

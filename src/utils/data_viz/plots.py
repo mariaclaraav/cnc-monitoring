@@ -4,7 +4,7 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 
 
 
@@ -168,7 +168,47 @@ def plot_features(
     plt.tight_layout()
     plt.show()
 
+def plot_columns(
+    df: pd.DataFrame,
+    columns: List[str],
+    title: Optional[str] = None,
+    xlabel: Optional[str] = None,
+    ylabel: Optional[str] = None,
+    figsize: Tuple[int, int] = (8, 6),
+    label_column: str = "Label",  # Specify the name of the column to use for shading
+    highlight_label: bool = False  # New parameter to toggle the red shading
+) -> None:
 
+    fig, ax = plt.subplots(figsize=figsize)
+
+    # Plotting each column
+    for column in columns:
+        if column in df.columns:
+            ax.plot(df.index, df[column], label=column)
+        else:
+            print(f"Warning: Column '{column}' not found in DataFrame.")
+
+    # Adding the red shaded background
+    if highlight_label and label_column in df.columns:
+        # Find ranges where the label column equals 1
+
+        is_label = df[label_column] == 1 
+        for i in range(len(is_label) - 1):
+            if is_label.iloc[i] and not is_label.iloc[i - 1]:
+                start = df.index[i]
+            if is_label.iloc[i] and not is_label.iloc[i + 1]:
+                end = df.index[i + 1]
+                ax.axvspan(start, end, color="red", alpha=0.2, label="_nolegend_")  # "_nolegend_" hides it from legend
+
+    # Adding labels, title, and legend
+    ax.set_title(title if title else "Plot of Columns")
+    ax.set_xlabel(xlabel if xlabel else "Index")
+    ax.set_ylabel(ylabel if ylabel else "Value")
+    ax.legend()
+    ax.grid(True)
+    plt.tight_layout()
+    plt.show()
+    
 class FeaturePlotter:
     def __init__(
         self, 

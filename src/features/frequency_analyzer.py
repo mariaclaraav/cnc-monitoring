@@ -14,7 +14,7 @@ class FrequencyAnalyzer:
         column: str = "Y_axis",
         sampling_rate: int = 2000,
         height_thresh: float = 0.05,
-        C: float = 0.2,
+        C: float = 0.15,
         plot: bool = False,
     ):
         """

@@ -2,7 +2,6 @@ import logging
 import os
 import sys
 from typing import List
-
 import pandas as pd
 from tqdm import tqdm
 
@@ -15,37 +14,37 @@ from src.features.build_features import TimeSeriesProcessor
 from src.features.custom_processor import CustomProcessor
 from src.utils.data_processing.etl import load_data
 
-SAVING_PATH = os.path.join(CURRENT_DIR, 'data', 'processed', 'features')
+# Paths
+SAVING_PATH = os.path.join(CURRENT_DIR, 'data', 'processed', 'adaptative_filter')
 DATA_PATH = os.path.join(CURRENT_DIR, 'data', 'processed', 'ETL', 'ETL_final.parquet')
 
-OPERATIONS = ['OP07', 'OP08', 'OP09', 
-                'OP10', 'OP11', 'OP12', 'OP13', 'OP14']
-FEATURE_TYPES = ['filter', 'dwt', 'emd']
+# Parameters
+OPERATIONS = [
+    'OP01', 'OP02', 'OP03', 'OP04', 
+    'OP05', 'OP06', 'OP07', 'OP08', 
+    'OP09', 'OP10', 'OP11', 'OP12', 
+    'OP13', 'OP14'
+]
+FEATURE_TYPES = ['filter']
 WINDOW_SIZE = 1000
 SAMPLING_RATE = 2000
 STEP_SIZE = 1
 MIN_PERIODS = 1
 
 # Configure Logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-logger = logging.getLogger()
-
-
+logging.basicConfig(level=logging.INFO)
 
 def process_and_save_operations(
     df: pd.DataFrame,
     operations: List[str],
     saving_path: str,
     processor: TimeSeriesProcessor,
-    feature_types: List[str]
+    feature_types: List[str],
+    filter_list: List[tuple] = None
 ) -> None:
     """
     Process and save data for each operation.
-    
+
     Args:
         df (pd.DataFrame): Input DataFrame.
         operations (List[str]): List of operations to process.
@@ -56,12 +55,23 @@ def process_and_save_operations(
     for operation in tqdm(operations, desc="Processing Operations"):
         logger.info(f"Processing operation '{operation}'...")
         
+        # Initialize the custom processor
         custom_processor = CustomProcessor(processor)
-        df_processed = custom_processor.filter_and_process(df, operation, feature_types)
         
+        # Set filter_list based on operation
+        if operation in ['OP05', 'OP02', 'OP07']:
+            filter_list = [(185, 215), (385, 405), (475, 515)]
+        elif operation in ['OP13']:
+            filter_list = [(300, 350)]
+        else:
+            filter_list = [(235, 265), (385, 405), (475, 515)]
+        
+        # Process the operation
+        df_processed = custom_processor.filter_and_process(df, operation, feature_types, filter_list)
+        
+        # Save the processed data
         save_path = os.path.join(saving_path, f"{operation}.parquet")
         logger.info(f"Saving processed data to '{save_path}'...")
-        
         df_processed.to_parquet(save_path)
         del df_processed  # Free memory
 
@@ -69,10 +79,10 @@ def process_and_save_operations(
 
 def feature_engineering() -> None:
     """
-    Main function to perform feature engineering pipeline.
+    Main function to perform the feature engineering pipeline.
     """
     logger.info("Starting feature engineering...")
-    
+
     # Initialize the processor
     processor = TimeSeriesProcessor(
         window_size=WINDOW_SIZE,
@@ -83,6 +93,7 @@ def feature_engineering() -> None:
     logger.info("TimeSeriesProcessor initialized.")
 
     # Load data
+    logger.info(f"Loading data from '{DATA_PATH}'...")
     df = load_data(DATA_PATH)
 
     # Process and save features
@@ -98,4 +109,6 @@ def feature_engineering() -> None:
     del df  # Ensure cleanup
 
 if __name__ == "__main__":
+    logger = logging.getLogger(__name__)
     feature_engineering()
+

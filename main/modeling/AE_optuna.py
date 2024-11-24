@@ -23,7 +23,7 @@ def main():
 
     # Import project-specific modules
     from utils.data_processing.splitting import create_mask, SplitData
-    from src.models.Optuna import AutoencoderObjective
+    from src.model_lib.Optuna import AutoencoderObjective
 
     # Define paths
     data_path = os.path.join(current_dir, 'data', 'processed', 'wavelet', 'OP04.parquet')

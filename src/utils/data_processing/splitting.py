@@ -1,15 +1,12 @@
 import re
-import os
 import numpy as np
 import pandas as pd
 import logging
 from typing import List, Tuple, Union, Optional
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 
 def create_mask(df: pd.DataFrame, periods: List[str], machine_types: Optional[List[str]] = None, normal: bool = True) -> pd.Series:
     """
@@ -220,74 +217,3 @@ class SplitData:
         return X_train, y_train, X_val, y_val, X_test, y_test, unique_codes_train, unique_codes_val, unique_codes_test
 
   
-class DataProcessor:
-    def __init__(self, logger, features, scaler_type='standard'):
-        self.logger = logger
-        self.features = features
-        self.scaler_type = scaler_type
-        self.scaler = None
-        self.is_fitted = False
-        
-    def load_data(self, data_path, operation=None):
-        try:
-            self.logger.info(f"Loading data from {data_path}...")
-            df = pd.read_parquet(data_path)
-            
-            if operation:
-                # Ensure operation is always a list
-                if isinstance(operation, str):
-                    operation = [operation]
-                df = df[df['Operation'].isin(operation)]
-            
-            return df
-        
-        except FileNotFoundError as e:
-            self.logger.error(f"Data file not found: {data_path}")
-            raise e
-    
-    def process_data(self, df_train, df_val):
-        
-        self.logger.info('Starting data processing for training and validation...')
-        
-        X_train = df_train[self.features]
-        X_val = df_val[self.features]
-        y_train = df_train['Label']
-        y_val = df_val['Label']
-        val_codes = df_val['Unique_Code']
-        
-        if self.scaler_type == 'standard':
-            self.scaler = StandardScaler()
-        elif self.scaler_type == 'minmax':
-            self.scaler = MinMaxScaler()
-        else:
-            raise ValueError(f"Scaler type '{self.scaler_type}' is not supported.")
-        
-        # Applying the scaler
-        X_train = self.scaler.fit_transform(X_train)
-        X_val = self.scaler.transform(X_val)
-        
-        # Converting back to DataFrame
-        X_train = pd.DataFrame(X_train, columns=self.features)
-        X_val = pd.DataFrame(X_val, columns=self.features)
-
-        self.is_fitted = True  # Mark scaler as fitted
-
-        return X_train, y_train, X_val, y_val, val_codes, self.scaler
-    
-    def process_test_data(self, df_test):
-        
-        if not self.is_fitted:
-            raise ValueError("Scaler has not been fitted. Please process training data first.")
-        
-        self.logger.info('Starting data processing for test set...')
-        
-        X_test = df_test[self.features]
-        y_test = df_test['Label']
-        test_codes = df_test['Unique_Code']
-        
-        # Applying the fitted scaler to the test set
-        X_test = self.scaler.transform(X_test)
-        X_test = pd.DataFrame(X_test, columns=self.features)
-
-        return X_test, y_test, test_codes
-

@@ -19,7 +19,7 @@ plt.style.use(style)
 
 # Import project-specific modules
 from utils.data_processing.splitting import DataProcessor
-from src.models.VanillaAE import VanillaAE, AutoencoderCallbacks, train_model, create_dataloaders
+from src.model_lib.VanillaAE import VanillaAE, AutoencoderCallbacks, train_model, create_dataloaders
 
 # Constants and configuration
 BATCH_SIZE = 128*4
