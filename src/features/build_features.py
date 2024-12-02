@@ -49,7 +49,7 @@ class TimeSeriesProcessor:
             ValueError: If an unsupported feature_type is provided.
         """
         additional_columns = [
-            'Time', 'Machine', 'Process', 'Label', 'Unique_Code', 'Period'
+            'Time', 'Machine', 'Process', 'Label', 'Unique_Code', 'Period', 'X_axis', 'Y_axis', 'Z_axis'
         ]
 
         feature_functions = {

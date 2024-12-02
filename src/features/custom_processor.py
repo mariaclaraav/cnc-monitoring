@@ -1,7 +1,7 @@
 import logging
 import gc
 import psutil
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import pandas as pd
 from src.features.frequency_analyzer import FrequencyAnalyzer
 
@@ -126,7 +126,7 @@ class CustomProcessor:
         
         return df
     def process_features(
-        self, df_filtered: pd.DataFrame, feature_types: List[str], filter_list = None
+        self, df_filtered: pd.DataFrame, feature_types: List[str], filter_list: Optional[List] = None
     ) -> List[pd.DataFrame]:
         """Process the time series features.
 
@@ -161,6 +161,7 @@ class CustomProcessor:
                         self.logger.info("Frequency by axis: {frequency_by_axis}")
                     else:
                         frequency_by_axis[col] = filter_list
+                        
                 data = self.processor.process_time_series(df = df_filtered, feature_type=feature_type, order=4, frequency_bands=frequency_by_axis)
                 
             elif feature_type == 'emd':
@@ -255,11 +256,14 @@ class CustomProcessor:
         self.logger.info("Cleaning DataFrame...")
         df.dropna(inplace=True)
         df.reset_index(drop=True, inplace=True)
+        # Mantendo apenas as colunas desejadas e removendo colunas com sufixos indesejados
+        df = df[[col for col in df.columns if col in ["X_axis", "Y_axis", "Z_axis"] or not col.endswith(("_x", "_y", "_z"))]]
+
 
         return df
 
     def filter_and_process(
-        self, df: pd.DataFrame, operation: str, feature_types: List[str], filter_list = None
+        self, df: pd.DataFrame, operation: str, feature_types: List[str], filter_list: Optional[List] = None
     ) -> pd.DataFrame:
         """Filter the DataFrame and process time series features.
 

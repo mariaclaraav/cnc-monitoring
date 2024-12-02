@@ -12,24 +12,22 @@ sys.path.append(CURRENT_DIR)
 # Import custom modules
 from src.features.build_features import TimeSeriesProcessor
 from src.features.custom_processor import CustomProcessor
+import warnings
+warnings.filterwarnings('ignore', category=pd.errors.SettingWithCopyWarning)
 from src.utils.data_processing.etl import load_data
 
 # Paths
-SAVING_PATH = os.path.join(CURRENT_DIR, 'data', 'processed', 'adaptative_filter')
+SAVING_PATH = os.path.join(CURRENT_DIR, 'data', 'processed', 'features', 'window_feat')
 DATA_PATH = os.path.join(CURRENT_DIR, 'data', 'processed', 'ETL', 'ETL_final.parquet')
 
-# Parameters
-OPERATIONS = [
-    'OP01', 'OP02', 'OP03', 'OP04', 
-    'OP05', 'OP06', 'OP07', 'OP08', 
-    'OP09', 'OP10', 'OP11', 'OP12', 
-    'OP13', 'OP14'
-]
-FEATURE_TYPES = ['filter']
-WINDOW_SIZE = 1000
+# ParametersC
+OPERATIONS = [ 'OP07']
+
+FEATURE_TYPES = ['statistical', 'energy','jerk','filter']
+WINDOW_SIZE = 200
 SAMPLING_RATE = 2000
-STEP_SIZE = 1
-MIN_PERIODS = 1
+STEP_SIZE = WINDOW_SIZE // 2
+MIN_PERIODS = 200
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO)

@@ -1,6 +1,7 @@
 import os
 import pandas as pd
-def configure_environment(group, set: str = "frequency_features", data_path: str = None):
+from src.utils.constants.process_constats import CONFIG
+def configure_environment(group, configuration = CONFIG, set: str = "frequency_features", data_path: str = None):
     """
     Configures the environment and retrieves operations and features based on the selected group.
 
@@ -13,71 +14,9 @@ def configure_environment(group, set: str = "frequency_features", data_path: str
     - operations (list): List of operations for the selected group.
     - features (list): List of features to use in the analysis.
     """
-    CONFIG = {
-        1: {
-            "OPERATIONS": ['OP01', 'OP03', 'OP04', 'OP06', 'OP08', 'OP09', 'OP10', 'OP11', 'OP12', 'OP14'],
-            "FREQ": '235-265Hz',
-        },
-        2: {
-            "OPERATIONS": ['OP05', 'OP02', 'OP07'],
-            "FREQ": '185-215Hz',
-        },
-        'OP01': {
-            "OPERATIONS": ['OP01'],
-            "FREQ": '235-265Hz',
-        },
-        'OP02': {
-            "OPERATIONS": ['OP02'],
-            "FREQ": '185-215Hz',
-        },
-        'OP03': {
-            "OPERATIONS": ['OP03'],
-            "FREQ": '235-265Hz',
-        },
-        'OP04': {
-            "OPERATIONS": ['OP04'],
-            "FREQ": '235-265Hz',
-        },
-        'OP05': {
-            "OPERATIONS": ['OP05'],
-            "FREQ": '185-215Hz',
-        },
-        'OP06': {
-            "OPERATIONS": ['OP06'],
-            "FREQ": '235-265Hz',
-        },
-        'OP07': {
-            "OPERATIONS": ['OP07'],
-            "FREQ": '185-215Hz',
-        },
-        'OP08': {
-            "OPERATIONS": ['OP08'],
-            "FREQ": '235-265Hz',
-        },
-        'OP09': {
-            "OPERATIONS": ['OP09'],
-            "FREQ": '235-265Hz',
-        },
-        'OP10': {
-            "OPERATIONS": ['OP10'],
-            "FREQ": '235-265Hz',
-        },
-        'OP11': {
-            "OPERATIONS": ['OP11'],
-            "FREQ": '235-265Hz',
-        },
-        'OP12': {
-            "OPERATIONS": ['OP12'],
-            "FREQ": '235-265Hz',
-        },
-        'OP14': {
-            "OPERATIONS": ['OP14'],
-            "FREQ": '235-265Hz',
-        },
-    }
 
     if set == "frequency_features":
-        config = CONFIG[group]
+        config = configuration[group]
         operations = config["OPERATIONS"]
         freq = config["FREQ"]
 
@@ -90,7 +29,7 @@ def configure_environment(group, set: str = "frequency_features", data_path: str
         if data_path is None:
             raise ValueError("For 'all_features', the data_path must be provided.")
         
-        config = CONFIG[group]
+        config = configuration[group]
         operations = config["OPERATIONS"]
 
         # Read feature columns dynamically from the file for the first operation

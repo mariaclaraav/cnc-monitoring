@@ -19,7 +19,7 @@ from src.utils.data_processing.predicted_anoamlies import PredictedAnomalies
 from src.model_lib.isolation_forest import IsolationForestModel
 from src.features.feature_selector import FeatureSelector
 
-GROUPS = ['OP01', 'OP02', 'OP03', 'OP04', 'OP05', 'OP06', 'OP07' 'OP08', 'OP09', 'OP10', 'OP11', 'OP12', 'OP14']
+GROUPS = ['OP07', 'OP08', 'OP09', 'OP10', 'OP11', 'OP12', 'OP14']
 
 SCALER_TYPE = None
 DATA_PATH = os.path.join(CURRENT_DIR, 'data', 'processed', 'split_train_test', 'all_features')

@@ -138,12 +138,12 @@ class IsolationForestModel:
         plt.title('Prediction Scores Distribution')
         plt.grid(True)
         plt.legend(loc='upper left')
-        plt.show()
+
         
         if save_dir:
             os.makedirs(save_dir, exist_ok=True)  # Ensure the directory exists
             save_path = os.path.join(save_dir, f'scores_{group}.png')
             plt.savefig(save_path, bbox_inches='tight')
             print(f"Plot saved to '{save_path}'")
-            
+        plt.show()
         print(f'Limiar de Anomalia: {limiar}')

@@ -3,14 +3,14 @@ font.size: 20                    # Set the global font size
 font.family: Times New Roman     # Set the global font family
 
 # Axes settings
-axes.linewidth: 2                # Set the width of the axes lines
+axes.linewidth: 1                # Set the width of the axes lines
 axes.titlesize: 20               # Set the font size of the axes titles
 axes.edgecolor: black            # Set the color of the axes edges
 axes.labelsize: 18               # Set the font size of the axes labels
 axes.grid: True                  # Enable grid on axes
 
 # Lines settings
-lines.linewidth: 1.5             # Set the width of the lines
+lines.linewidth: 1.0             # Set the width of the lines
 lines.markersize: 6              # Set the size of the markers
 
 # Figure settings
@@ -21,7 +21,7 @@ xtick.labelsize: 16              # Set the font size of the x-axis tick labels
 ytick.labelsize: 16              # Set the font size of the y-axis tick labels
 
 # Legend settings
-legend.fontsize: 13              # Set the font size of the legend
+legend.fontsize: 12              # Set the font size of the legend
 legend.framealpha: 0.8           # Set the transparency of the legend frame
 legend.edgecolor: black          # Set the color of the legend frame edge
 legend.shadow: False             # Disable the shadow for the legend

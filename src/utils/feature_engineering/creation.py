@@ -4,6 +4,7 @@ import pywt
 import emd
 from typing import Callable, Dict, List, Tuple
 from scipy.signal import butter, filtfilt
+from src.utils.filter.filter import perform_fft
 
 class FeatureCreationUtils:
     """Utility class for feature extraction from time series data, including
@@ -76,6 +77,13 @@ class FeatureCreationUtils:
         mean_value = np.mean(x)
         n_over = np.sum(x > mean_value)
         return n_over / len(x)
+      
+    @staticmethod
+    def _freq_rms(x: pd.Series, fs: int=2000) -> float:
+        # Perform FFT
+        freq, fft_values = perform_fft(x.values, fs)
+        
+        return np.sqrt(np.mean(fft_values ** 2))
 
     @staticmethod
     def statistical_features(
@@ -102,6 +110,7 @@ class FeatureCreationUtils:
             'std': lambda x: np.std(x),
             'max': lambda x: np.abs(max(x)),
             'rms': lambda x: np.sqrt(np.sum(x ** 2) / len(x)),
+            'freq_rms': lambda x: FeatureCreationUtils._freq_rms(x),
             'skew': lambda x: pd.Series(x).skew(),
             'kurt': lambda x: pd.Series(x).kurt(),
             'impulse_fact': lambda x: np.max(np.abs(x)) / (np.sum(np.abs(x)) / len(x)),
@@ -109,7 +118,7 @@ class FeatureCreationUtils:
             'peak_to_peak': lambda x: np.max(x) - np.min(x),
             'empty_ratio': FeatureCreationUtils._empty_ratio,
             'peak_intensity': FeatureCreationUtils._peak_intensity,
-            'linearity': FeatureCreationUtils._linearity,
+            #'linearity': FeatureCreationUtils._linearity,
             'equal_ratio': FeatureCreationUtils._equal_ratio,
             'over_avg': FeatureCreationUtils._over_avg
         }

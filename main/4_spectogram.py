@@ -25,7 +25,7 @@ os.system('cls')
 CURRENT_DIR = os.getcwd()
 sys.path.append(CURRENT_DIR)
 
-from src.features.cwt import CWTAnalyzer
+from src.features.cwt import CustomCWT
 # Paths
 SAVING_PATH = os.path.join(CURRENT_DIR, 'data', 'spectrogram')
 DATA_PATH = os.path.join(CURRENT_DIR, 'data', 'processed', 'ETL', 'ETL_final.parquet')
@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
             for axis in ['X_axis', 'Y_axis', 'Z_axis']:
                 signal = subset[axis].values
-                cwt_data = CWTAnalyzer(frequencies=FREQUENCIES, 
+                cwt_data = CustomCWT(frequencies=FREQUENCIES, 
                                        wavelet=WAVELET, 
                                        sampling_rate= SAMPLE_RATE).run(signal)
                 data_dict[f"{unique_code}_{axis}"] = cwt_data

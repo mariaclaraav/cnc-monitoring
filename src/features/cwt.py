@@ -3,7 +3,7 @@ import pywt
 import matplotlib.pyplot as plt
 from typing import List, Union
 
-class CWTAnalyzer:
+class CustomCWT:
     def __init__(self, frequencies: List[float], wavelet: str, sampling_rate: int):
         """
         Initializes the CWTAnalyzer with specified frequencies, wavelet, and sampling rate.

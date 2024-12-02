@@ -95,8 +95,8 @@ def bandpass_filter(data, lowcut, highcut, fs, order=4):
     y = filtfilt(b, a, data)
     return y
 
-def perform_fft(time, signal, fs):
-    N = len(time)
+def perform_fft(signal, fs):
+    N = len(signal)
     
     # Calculate FFT
     yf = fft(signal)
