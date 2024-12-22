@@ -25,18 +25,19 @@ os.system('cls')
 CURRENT_DIR = os.getcwd()
 sys.path.append(CURRENT_DIR)
 
+
 from src.features.cwt import CustomCWT
 # Paths
 SAVING_PATH = os.path.join(CURRENT_DIR, 'data', 'spectrogram')
 DATA_PATH = os.path.join(CURRENT_DIR, 'data', 'processed', 'ETL', 'ETL_final.parquet')
-
+BASE_DIR = os.path.join(CURRENT_DIR, 'figure', 'cwt')
 os.makedirs(SAVING_PATH, exist_ok=True)
 
 # Parameters
-WAVELET = 'shan'  # Options: gaus8, mexh
+WAVELET = 'cmor0.5-1.0'  # Options: gaus8, mexh
 FREQUENCIES = [600, 100]  # Desired frequencies
 SAMPLE_RATE = 2000  # Sampling rate
-OPERATIONS = ['OP06']
+OPERATIONS = ['OP06', 'OP07', 'OP10']
 
 
 # Function to load data
@@ -62,35 +63,59 @@ def filter_and_process(df, operation):
 # Main script
 if __name__ == '__main__':
     data_dict = {}
-    df = load_data(DATA_PATH)
-    min_length = float('inf')  # Inicializa o comprimento mínimo
+    data = load_data(DATA_PATH)
     
+    df_cwt = pd.DataFrame()
     for op in tqdm(OPERATIONS, desc="Processing operations"):
-        df_filtered = filter_and_process(df, operation=op)
-
-        for unique_code in tqdm(df_filtered['Unique_Code'].unique(), desc=f"Processing unique codes for {op}", leave=False):
-            subset = df_filtered[df_filtered['Unique_Code'] == unique_code]
-
-            for axis in ['X_axis', 'Y_axis', 'Z_axis']:
-                signal = subset[axis].values
-                cwt_data = CustomCWT(frequencies=FREQUENCIES, 
+        
+        df = data[data['Process'] == op][['Time', 'X_axis', 'Y_axis', 'Z_axis', 'Unique_Code', 'Label']].copy()
+        path = os.path.join(BASE_DIR, op)
+        os.makedirs(path, exist_ok=True)
+        
+        for unique_code in tqdm(df['Unique_Code'].unique(), desc=f"Processing unique codes for {op}", leave=False):
+            subset = df[df['Unique_Code'] == unique_code]
+            label = subset['Label'].iloc[0]
+            cwt_transform = CustomCWT(frequencies=FREQUENCIES, 
                                        wavelet=WAVELET, 
-                                       sampling_rate= SAMPLE_RATE).run(signal)
-                data_dict[f"{unique_code}_{axis}"] = cwt_data
-                min_length = min(min_length, len(cwt_data))
+                                       sampling_rate= SAMPLE_RATE)
+            for axis in ['X_axis', 'Y_axis', 'Z_axis']:
+                time = subset['Time'].values
+                signal = subset[axis].values
                 
-                # Clear memory
-                del signal, cwt_data
-                gc.collect()
-
+                # feat_coef = cwt_data.get_cwt_features(signal)
+                
+                # if axis == 'X_axis':                 
+                #     X_data = feat_coef.add_suffix('_X_axis')
+                # elif axis == 'Y_axis':
+                #     Y_data = feat_coef.add_suffix('_Y_axis')
+                # elif axis == 'Z_axis':
+                #     Z_data = feat_coef.add_suffix('_Z_axis')
+                
+                cwt_transform.save_cwt_img(
+                time=time,
+                signal=signal,
+                save_path=os.path.join(path, f'{unique_code}_{axis[0]}.png')  # Caminho dinâmico com inicial do eixo
+            )
+                    
+            # data_dict['Unique_Code'] = [unique_code]*len(feat_coef)
+            # data_dict['Label'] = [label]*len(feat_coef)
+            data_dict['Unique_Code'] = [unique_code]
+            data_dict['Label'] = [label]
+            #features = pd.concat([X_data, Y_data, Z_data], axis=1)
+            # Clear memory
+            del signal, time
+            gc.collect()
+            df_aux = pd.DataFrame(data_dict)
+            #df_aux = pd.concat([df_aux, features], axis=1)
+            if 'df_cwt' in locals():
+                df_cwt = pd.concat([df_cwt, df_aux], axis=0)
+            else:
+                df_cwt = df_aux
         # Clear memory
-        del df_filtered
+        del df_aux
         gc.collect()
-    
-        truncated_data = {key: value[:min_length] for key, value in data_dict.items()}
 
-        df_cwt = pd.DataFrame(truncated_data)
-        parquet_path = os.path.join(SAVING_PATH, f"cwt_data_{op}.parquet")
+        parquet_path = os.path.join(path, f"label_{op}.parquet")
         df_cwt.to_parquet(parquet_path, index=False)
         
         del df_cwt

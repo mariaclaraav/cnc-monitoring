@@ -16,8 +16,8 @@
 
 # Ignore studies
 *.ckpt
-.json
-.png
+*.json
+*.png
 lightning_logs/
 optuna_logs/
 
