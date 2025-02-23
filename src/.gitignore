@@ -1,0 +1,26 @@
+# Ignore all data files
+*.h5
+*.parquet
+*.csv
+*.db
+
+# Ignore all notebooks
+*.ipynb
+
+# Ignore built-artifacts
+*.pyc
+*.tfevents.*
+
+# Ignore conda .yml files
+*.yml
+
+# Ignore studies
+*.ckpt
+*.json
+*.png
+*.jpeg
+lightning_logs/
+optuna_logs/
+
+
+
