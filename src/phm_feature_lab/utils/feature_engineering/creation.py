@@ -4,7 +4,7 @@ import pywt
 import emd
 from typing import Callable, Dict, List, Tuple
 from scipy.signal import butter, filtfilt
-from phm_feature_labutils.filter.filter import perform_fft
+from phm_feature_lab.utils.filter.filter import perform_fft
 
 class FeatureCreationUtils:
     """Utility class for feature extraction from time series data, including

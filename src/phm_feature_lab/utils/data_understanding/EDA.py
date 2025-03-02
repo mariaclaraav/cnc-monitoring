@@ -1092,9 +1092,15 @@ class PCA_Visualize:
         
         
         
-def plot_correlation_matrix(data: pd.DataFrame, title: str, method: str = "pearson") -> None:
+def plot_correlation_matrix(
+    data: pd.DataFrame, 
+    title: str, 
+    method: str = "pearson", 
+    vmin: float = -1.0, 
+    vmax: float = 1.0
+) -> None:
     """
-    Plots a heatmap of the Pearson correlation matrix for the given dataset.
+    Plots a heatmap of the correlation matrix for the given dataset.
 
     Parameters
     ----------
@@ -1102,6 +1108,12 @@ def plot_correlation_matrix(data: pd.DataFrame, title: str, method: str = "pears
         The dataset for which the correlation matrix will be calculated.
     title : str
         The title for the heatmap plot.
+    method : str, optional
+        The method used to calculate the correlation. Default is "pearson".
+    vmin : float, optional
+        The minimum value for the colorbar. Default is -1.0.
+    vmax : float, optional
+        The maximum value for the colorbar. Default is 1.0.
     """
     plt.figure(figsize=(16, 14))
     correlation_matrix = data.corr(method)
@@ -1116,7 +1128,9 @@ def plot_correlation_matrix(data: pd.DataFrame, title: str, method: str = "pears
         annot_kws={"size": 12},
         cbar_kws={"shrink": 0.8},
         linewidths=0.5,
-        square=True
+        square=True,
+        vmin=vmin,  # Valor mínimo da barra de cores
+        vmax=vmax   # Valor máximo da barra de cores
     )
     
     plt.xticks(fontsize=12)

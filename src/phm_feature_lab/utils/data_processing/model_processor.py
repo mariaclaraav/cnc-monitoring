@@ -1,12 +1,11 @@
 import pandas as pd
 import logging
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-import logging
+from phm_feature_lab.utils.data_processing.data_scaler import DataScaler
+from phm_feature_lab.utils.logger import Logger 
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+logger = Logger().get_logger()
 
-from phm_feature_lab.utils.data_processing.data_scale import DataScaler
 
 class ModelProcessor:
     def __init__(self, logger, scaler_type=None, need_val = True):

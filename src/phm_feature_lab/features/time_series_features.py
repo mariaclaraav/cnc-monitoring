@@ -2,7 +2,7 @@ import pandas as pd
 from phm_feature_lab.utils.feature_engineering.creation import FeatureCreationUtils
 from tqdm import tqdm
 
-class TimeSeriesProcessor:
+class TimeSeriesFeatures:
     def __init__(self, window_size, step_size, min_periods, sampling_rate):
         
         self.__window_size = window_size

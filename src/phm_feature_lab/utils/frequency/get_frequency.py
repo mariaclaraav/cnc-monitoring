@@ -5,7 +5,7 @@ from scipy.stats import binned_statistic
 from scipy.signal import find_peaks
 from typing import Tuple, List, Optional
 
-from src.utils.filter.filter import perform_fft
+from phm_feature_lab.utils.filter.filter import perform_fft
 
 class FrequencyProcessor:
     def __init__(

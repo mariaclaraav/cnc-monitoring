@@ -7,7 +7,6 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from typing import List, Tuple, Union, Optional
 
 
-
 def plot_original_vs_reconstructed(X_test, X_test_reconstructed, sample_index=1, data = 'Test', scaler = None):
     """
     Plot original vs reconstructed signal for a sample.
@@ -23,7 +22,7 @@ def plot_original_vs_reconstructed(X_test, X_test_reconstructed, sample_index=1,
     plt.title(f'Original vs Reconstructed - {data} Set')
     plt.legend(loc='upper right')
     plt.show()
-    
+
 def split_hitogram(X_train, X_val, column_index = 1, ylim = -0.1):
     
     plt.figure(figsize=(10, 4))
@@ -90,8 +89,7 @@ class AnomalyDetectionVisualizer:
         plt.legend()
         plt.title(f'Detected Anomalies - {data} data')
         plt.show()
-        
-        
+
 
 def plot_features(
     df: Union[pd.DataFrame, 'dask.dataframe.DataFrame'], 
@@ -208,7 +206,7 @@ def plot_columns(
     ax.grid(True)
     plt.tight_layout()
     plt.show()
-    
+
 class FeaturePlotter:
     def __init__(
         self, 
@@ -361,7 +359,8 @@ class FeaturePlotter:
         for feature in features:
             sns.kdeplot(self.df[feature], fill=True, label=feature, ax=ax)
         ax.legend(loc='upper right')
-        
+
+
 def plot_scatter_matrix(df, machine, process, cols, sample_frac=0.05, random_state=0):
     """
     Plots a scatter matrix for specified columns for a given process and machine in a DataFrame,
@@ -377,25 +376,32 @@ def plot_scatter_matrix(df, machine, process, cols, sample_frac=0.05, random_sta
     """
 
     # Filter data by machine and process
-    df_filtered = df[(df['Machine'] == machine) & (df['Process'] == process)]
+    df_filtered = df[(df["Machine"] == machine) & (df["Process"] == process)]
 
     # Ensure only columns that exist in the DataFrame are used
     cols = [col for col in cols if col in df_filtered.columns]
 
     # Determine the column order for 'Unique_Code'
-    unique_code_order = df_filtered['Unique_Code'].unique()
+    unique_code_order = df_filtered["Unique_Code"].unique()
 
     # Create the scatter matrix
-    fig = px.scatter_matrix(df_filtered.sample(frac=sample_frac, random_state=random_state),
-                            dimensions=cols, color='Unique_Code',
-                            category_orders={'Unique_Code': list(unique_code_order)})
+    fig = px.scatter_matrix(
+        df_filtered.sample(frac=sample_frac, random_state=random_state),
+        dimensions=cols,
+        color="Unique_Code",
+        category_orders={"Unique_Code": list(unique_code_order)},
+    )
 
     # Update layout
-    fig.update_layout(width=1400, height=1000, legend_title_font_size=22)
-  
+    fig.update_layout(
+        width=1400,
+        height=1000,
+        legend_title_font_size=18,
+        legend_title_text="Código do processo",
+    )
 
     # Update trace characteristics
-    fig.update_traces(marker=dict(size=5), diagonal_visible=False, showupperhalf=False)
+    fig.update_traces(marker=dict(size=2), diagonal_visible=False, showupperhalf=False)
 
     # Display the figure
     fig.show()
