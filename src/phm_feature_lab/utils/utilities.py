@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+from typing import List, Type, Any
 
 class Utilities:
     """ A utility class for performing common DataFrame operations"""
@@ -94,3 +96,91 @@ class Utilities:
         df.reset_index(drop=True, inplace=True)
 
         return df
+    
+    @staticmethod
+    def ensure_numpy_array(data):
+        """
+        Ensure the input data is converted to a numpy array.
+        """
+        if isinstance(data, np.ndarray):
+            return data
+        elif isinstance(data, (pd.DataFrame, pd.Series)):
+            return data.values
+        elif isinstance(data, list):
+            return np.array(data)
+        else:
+            raise ValueError("Unsupported data type. Cannot convert to numpy array.")
+        
+    @staticmethod
+    def ensure_list(
+        value: Any,
+        expected_type: Type,
+        allow_empty: bool = False,
+        error_message: str = None,
+    ) -> List[Any]:
+        """Validate that a value is a list and that all its elements are of the expected type.
+
+        Args:
+            value (Any): The value to validate.
+            expected_type (Type): The expected type of the list elements.
+            allow_empty (bool): Whether an empty list is allowed. Defaults to False.
+            error_message (str): Custom error message to raise if validation fails.
+
+        Returns:
+            List[Any]: The validated list.
+
+        Raises:
+            TypeError: If `value` is not a list or contains elements of the wrong type.
+            ValueError: If `value` is an empty list and `allow_empty` is False.
+        """
+        # Verifica se o valor é uma lista
+        if not isinstance(value, list):
+            raise TypeError(error_message or f"Expected a list, but got {type(value).__name__}.")
+
+        # Verifica se a lista está vazia
+        if not allow_empty and not value:
+            raise ValueError(error_message or "List cannot be empty.")
+
+        # Verifica se todos os elementos são do tipo esperado
+        if not all(isinstance(item, expected_type) for item in value):
+            raise TypeError(
+                error_message
+                or f"All elements in the list must be of type {expected_type.__name__}."
+            )
+
+        return value
+    
+    @staticmethod
+    def check_image_validity(image: np.ndarray) -> None:
+        """
+        Validates the format and properties of the image.
+
+        Parameters:
+        - image: Input image.
+
+        Raises:
+        - TypeError: If the image is not a NumPy array.
+        - ValueError: If the image is not grayscale, square, or contains invalid values.
+        """
+        # Check if it is a NumPy array
+        Utilities.ensure_numpy_array(image)
+
+        # Check if it is a 2D matrix (grayscale)
+        if len(image.shape) != 2:
+            logger.error(f"Invalid format: Expected a 2D grayscale image, but received {len(image.shape)} dimensions.")
+            raise ValueError("The image must be a 2D grayscale array.")
+
+        # Check if the image is square
+        if image.shape[0] != image.shape[1]:
+            logger.error(f"Invalid dimensions: Expected a square image, but received {image.shape}.")
+            raise ValueError("The image must be square (width equals height).")
+
+        # Check if the data type is numeric
+        if not np.issubdtype(image.dtype, np.number):
+            logger.error(f"Invalid data type: {image.dtype} is not numeric.")
+            raise ValueError("The image must be of a numeric type (e.g., int or float).")
+
+        # Check for NaN or infinite values
+        if np.any(np.isnan(image)) or np.any(np.isinf(image)):
+            logger.error("Invalid values detected: The image contains NaN or infinite values.")
+            raise ValueError("The image must not contain NaN or infinite values.")

@@ -112,7 +112,7 @@ class CustomCWT:
         
         # Save the figure in RGBA and or return it
         if save_path:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight', pad_inches=0)  # Save without extra padding
+            fig.savefig(save_path, dpi=500, bbox_inches='tight', pad_inches=0)  # Save without extra padding
             plt.close(fig)  # Close the figure after saving
         else:
             return fig
@@ -138,16 +138,16 @@ class CustomCWT:
 
         cax = ax.pcolormesh(time, freq, coef, cmap=cmap, shading='auto')
 
-        ax.set_xlabel('Time (s)')
-        ax.set_ylabel('Frequency (Hz)')
+        ax.set_xlabel('Tempo (s)')
+        ax.set_ylabel('Frequência (Hz)')
         ax.set_title(title)
         
         # Add colorbar only if not using external axis
         if ax is None:
-            fig.colorbar(cax, ax=ax, label='Power')
+            fig.colorbar(cax, ax=ax, label='Coeficientes normalizados')
             plt.show()
         else:
-            plt.colorbar(cax, ax=ax, label='Power')
+            plt.colorbar(cax, ax=ax, label='Coeficientes normalizados')
 
     def run(self, signal: np.ndarray) -> List[float]:
         """Runs the CWT analysis on the provided signal and returns the spectrogram as a flattened list.

@@ -42,6 +42,5 @@ class DefaultDataLoaderBuilder(DataLoaderBuilderInterface):
             batch_size=self.batch_size,
             shuffle=self.shuffle,
             num_workers=self.num_workers,
-            persistent_workers=self.num_workers > 0,
-            pin_memory=torch.cuda.is_available()  # Otimiza para GPU se disponível
+            persistent_workers=self.num_workers > 0
         )

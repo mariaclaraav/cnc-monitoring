@@ -15,67 +15,12 @@ from optuna.samplers import TPESampler
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
-from src.model_lib.anomaly_rate import sliding_window_anomalies, expand_anomaly_index_with_threshold
+from phm_feature_lab.utils.logger import Logger
+from phm_feature_lab.utils.utilities import Utilities
+from phm_feature_lab.models.objective_functions import ObjectiveFunctions
 
+logger = Logger().get_logger()
 
-
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-# Ensure consistent style
-#sns.set_theme()
-
-def ensure_numpy_array(data: Union[np.ndarray, pd.DataFrame, pd.Series, List[Any]]) -> np.ndarray:
-    """
-    Ensure the input data is converted to a numpy array.
-    
-    Args:
-        data: The input data, which could be a numpy array, pandas DataFrame, Series, or list.
-    
-    Returns:
-        A numpy array representing the input data.
-    
-    Raises:
-        ValueError: If the data type is unsupported.
-    """
-    if isinstance(data, np.ndarray):
-        return data
-    elif isinstance(data, (pd.DataFrame, pd.Series)):
-        return data.values
-    elif isinstance(data, list):
-        return np.array(data)
-    else:
-        raise ValueError("Unsupported data type. Cannot convert to numpy array.")
-    
-def IF_objective(trial: optuna.Trial, X_train: np.ndarray, X_val: np.ndarray, y_val: np.ndarray, metric: str = 'precision') -> float:
-    """
-    Objective function for Optuna to optimize Isolation Forest model.
-
-    """
-    contamination = trial.suggest_float('contamination', 0.000001, 0.2)
-
-    model = IsolationForest(
-        contamination=contamination, 
-        random_state=42, 
-        bootstrap=False
-    )
-    
-    X_train = ensure_numpy_array(X_train)
-    X_val = ensure_numpy_array(X_val)
-    y_val = ensure_numpy_array(y_val)
-    
-    model.fit(X_train)
-    
-    y_pred = model.predict(X_val)
-    y_pred = np.where(y_pred == -1, 1, 0)
-    
-    if metric == 'precision':
-        return precision_score(y_val, y_pred)
-    elif metric == 'f1':
-        return f1_score(y_val, y_pred, zero_division=1)
-    else:
-        raise ValueError("Metric must be either 'precision' or 'f1'.")
-    
 class AblationStudy:
     def __init__(self,
         X_train: np.ndarray,
@@ -86,8 +31,7 @@ class AblationStudy:
         metric: str,
         seed: int,
         n_trials: int,
-        n_warmup_steps: int,
-        logger):
+        n_warmup_steps: int):
         
         self.X_train = X_train
         self.X_val = X_val
@@ -98,7 +42,6 @@ class AblationStudy:
         self.seed = seed
         self.n_trials = n_trials
         self.n_warmup_steps = n_warmup_steps
-        self.logger = logger
         self.sampler = TPESampler(seed=self.seed)
         self.pruner = MedianPruner(n_warmup_steps=self.n_warmup_steps)
 
@@ -183,7 +126,7 @@ class AblationStudy:
             load_if_exists=True
         )
         IF_study.optimize(
-            lambda trial: IF_objective(trial, X_train_subset, X_selected, y_selected, metric=self.metric),
+            lambda trial: ObjectiveFunctions.IsolationForest(trial, X_train_subset, X_selected, y_selected, metric=self.metric),
             n_trials=self.n_trials,
             n_jobs=-1
         )
@@ -196,7 +139,7 @@ class AblationStudy:
                                                                         fraction_end,
                                                                         decrement, 
                                                                         n_decrement):
-            self.logger.info(log_message)
+            logger.info(log_message)
             self.optimize_study(X_train_subset=self.X_train[::100],
                                 X_selected=X_selected,
                                 y_selected=y_selected,
@@ -206,7 +149,7 @@ class AblationStudy:
 class RetrainBestTrial:
     def __init__(self, study: optuna.Study, X_train: np.ndarray):
         self.study_ = study
-        self.X_train_ = ensure_numpy_array(X_train)
+        self.X_train_ = Utilities.ensure_numpy_array(X_train)
         self.model_ = None
 
     def train(self) -> None:
@@ -216,6 +159,9 @@ class RetrainBestTrial:
         best_trial = self.study_.best_trial
         self.model_ = IsolationForest(        
             contamination=best_trial.params['contamination'],
+            n_estimators=best_trial.params['n_estimators'],
+            max_samples=best_trial.params['max_samples'],
+            max_features=best_trial.params['max_features'],
             random_state=42,
             bootstrap=False
         )
@@ -225,8 +171,8 @@ class RetrainBestTrial:
         """
         Predict and evaluate the model on validation data.
         """
-        X_val = ensure_numpy_array(X_val)
-        y_val = ensure_numpy_array(y_val)
+        X_val = Utilities.ensure_numpy_array(X_val)
+        y_val = Utilities.ensure_numpy_array(y_val)
         
         if self.model_ is None:
             raise Exception('Model has not been trained yet. Call the train method first.')
@@ -247,7 +193,7 @@ class RetrainBestTrial:
         Plot anomalies detected by the model.
         """
         plt.figure(figsize=figsize)
-        X_val = ensure_numpy_array(X_val)[:, column_index]
+        X_val = Utilities.ensure_numpy_array(X_val)[:, column_index]
         plt.plot(X_val, color='blue', label=f'{data} data', zorder=2)
         plt.scatter(np.where(y_pred_val == 1)[0], X_val[y_pred_val == 1], color='orange', s=25, label='Model', zorder=3)
         
@@ -266,7 +212,7 @@ class RetrainBestTrial:
         """
         Plot histogram of prediction scores.
         """
-        X_val = ensure_numpy_array(X_val)
+        X_val = Utilities.ensure_numpy_array(X_val)
         y_scores = self.model_.decision_function(X_val)
         plt.figure(figsize=(10, 4))
         sns.histplot(y_scores, kde=True, stat='density')
@@ -275,7 +221,7 @@ class RetrainBestTrial:
         plt.title('Prediction Scores')
         plt.show()
         
-class IF_testing:
+class IsolationForestModel:
     def __init__(self, X_train, X_val, y_val, X_test, y_test, val_codes, storage_path):
         """
         Initializes the IF_testing class with training and testing data.

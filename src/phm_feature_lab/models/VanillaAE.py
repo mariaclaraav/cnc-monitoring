@@ -381,7 +381,7 @@ def train_model(model, train_loader, val_loader, num_epochs, trainer_logger, cal
     )
     trainer.fit(model, train_dataloaders=train_loader, val_dataloaders=val_loader)
     
-def create_dataloaders(X_train, X_val, X_test, BATCH_SIZE, NUM_WORKERS, logger, device):
+def create(X_train, X_val, X_test, BATCH_SIZE, NUM_WORKERS, logger, device):
     """
     Creates DataLoaders for training, validation, and test datasets.
 

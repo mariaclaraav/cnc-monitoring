@@ -2,6 +2,7 @@ import cv2
 from typing import Tuple
 import numpy as np
 from phm_feature_lab.utils.logger import Logger
+from phm_feature_lab.utils.utilities import Utilities
 
 logger = Logger().get_logger()
 
@@ -22,28 +23,6 @@ class CustomEdgeDetection:
         logger.info("CustomEdgeDetection initialized with given parameters.")
 
 
-    def __check_image_validity(self, image: np.ndarray) -> None:
-        """
-        Validates the image format and properties.
-
-        Parameters:
-        - image: Input image.
-
-        Raises:
-        - TypeError: If the image is not a NumPy array.
-        - ValueError: If the image is not grayscale or square.
-        """
-        if not isinstance(image, np.ndarray):
-            logger.error("Invalid image type: Expected a NumPy array.")
-            raise TypeError("Image must be a NumPy array.")
-
-        if len(image.shape) != 2:
-            logger.error("Invalid image format: Expected a 2D grayscale image.")
-            raise ValueError("Image must be a 2D grayscale array.")
-
-        if image.shape[0] != image.shape[1]:
-            logger.error("Invalid image dimensions: Expected a square image.")
-            raise ValueError("Image must be square (width equals height).")
 
     def _apply_gaussian_blur(self, image: np.ndarray) -> np.ndarray:
         """
@@ -91,7 +70,7 @@ class CustomEdgeDetection:
         - processed_image: The final processed image with detected edges.
         """
         try:
-            self.__check_image_validity(image)
+            Utilities.check_image_validity(image)
             blurred_image = self._apply_gaussian_blur(image)
             processed_image = self._apply_canny_edge_detection(blurred_image)
             #logger.info("Edge detection completed successfully.")

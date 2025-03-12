@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 import torch
 from typing import Optional, Any
-import logging
+from phm_feature_lab.utils.logger import Logger 
 
+logger = Logger().get_logger()
 
 class TensorConverterInterface(ABC):
     """Interface for converting data into PyTorch tensors."""
@@ -15,14 +16,8 @@ class TensorConverterInterface(ABC):
 class DefaultTensorConverter(TensorConverterInterface):
     """Converts array-like data into PyTorch tensors and moves them to a device."""
     
-    def __init__(self, logger: logging.Logger):
-        """
-        Initialize the tensor converter.
-
-        Args:
-            logger (logging.Logger): Logger for logging information.
-        """
-        self.logger = logger
+    def __init__(self):
+        pass
 
     def convert(self, data: Optional[Any], device: torch.device) -> torch.Tensor:
         """
@@ -36,12 +31,12 @@ class DefaultTensorConverter(TensorConverterInterface):
             torch.Tensor: Converted tensor on the specified device.
         """
         if data is None:
-            self.logger.warning("Input data is None, returning empty tensor.")
+            logger.warning("Input data is None, returning empty tensor.")
             return torch.tensor([], dtype=torch.float32).to(device)
         
         try:
             tensor = torch.tensor(data, dtype=torch.float32).to(device)
             return tensor
         except Exception as e:
-            self.logger.error(f"Failed to convert data to tensor: {e}")
+            logger.error(f"Failed to convert data to tensor: {e}")
             raise
