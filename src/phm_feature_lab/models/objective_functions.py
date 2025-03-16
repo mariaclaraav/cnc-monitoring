@@ -17,7 +17,7 @@ class ObjectiveFunctions:
         Objective function for Optuna to optimize Isolation Forest model.
 
         """
-        contamination = trial.suggest_float('contamination', 0.000001, 0.2)
+        contamination = trial.suggest_float('contamination', 0.000001, 0.001)
         max_samples = trial.suggest_float('max_samples', 0.1, 1)
         max_features = trial.suggest_float('max_features', 0.1, 1)
         n_estimators = trial.suggest_int('n_estimators', 10, 1000)
@@ -44,5 +44,9 @@ class ObjectiveFunctions:
             return precision_score(y_val, y_pred)
         elif metric == 'f1':
             return f1_score(y_val, y_pred, zero_division=1)
+        elif metric == 'accuracy':
+            return accuracy_score(y_val, y_pred)
+        elif metric == 'recall':
+            return recall_score(y_val, y_pred)
         else:
-            raise ValueError("Metric must be either 'precision' or 'f1'.")
+            raise ValueError("Metric must be either 'precision', 'f1', 'accuracy', or 'recall'.")

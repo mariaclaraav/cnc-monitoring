@@ -9,7 +9,7 @@ from phm_feature_lab.utils.utilities import Utilities
 
 
 class CustomIsolationForest:
-    def __init__(self, n_estimators: int = 100, contamination: float = 0.1, random_state: int = 42, bootstrap: bool = False, verbose: int = 1):
+    def __init__(self, n_estimators: int = 100, max_samples: float = 0.5, max_features: float = 0.5, contamination: float = 0.1, random_state: int = 42, bootstrap: bool = False, verbose: int = 1):
         """
         Initialize the Isolation Forest model.
 
@@ -21,16 +21,20 @@ class CustomIsolationForest:
             verbose (int): Verbosity level.
         """
         self.__n_estimators = n_estimators
+        self.__max_samples = max_samples
+        self.__max_features = max_features
         self.__contamination = contamination
         self.__random_state = random_state
         self.__bootstrap = bootstrap
         self.__verbose = verbose
-        self.__model = self.__get_sklearn_model()
+        self.__model = self.get_sklearn_model()
 
-    def __get_sklearn_model(self):
+    def get_sklearn_model(self):
         """Create and return an IsolationForest instance."""
         model = IsolationForest(
             n_estimators=self.__n_estimators,
+            max_samples=self.__max_samples,
+            max_features=self.__max_features,
             contamination=self.__contamination,
             random_state=self.__random_state,
             bootstrap=self.__bootstrap,
@@ -48,7 +52,8 @@ class CustomIsolationForest:
         """
         X_train = Utilities.ensure_numpy_array(X_train)
         self.__model.fit(X_train)
-
+        return self.__model
+    
     def predict(self, X_val: np.ndarray, y_val: np.ndarray) -> Tuple[np.ndarray, Dict[str, float]]:
         """
         Predict and evaluate the model on validation data.
@@ -74,7 +79,7 @@ class CustomIsolationForest:
         }
         return y_pred, metrics
 
-    def plot_anomalies(self, X_val: np.ndarray, y_val: np.ndarray, y_pred_val: np.ndarray, column_index: int = 0, s: int = 5):
+    def plot_anomalies(self, X_val: np.ndarray, y_val: np.ndarray, y_pred_val: np.ndarray, column_index: int = 0, s: int = 6):
         """
         Plot anomalies detected by the model.
 
@@ -85,15 +90,15 @@ class CustomIsolationForest:
             column_index (int): The index of the column to plot.
             s (int): Size of the scatter points.
         """
-        plt.figure(figsize=(12, 6))
+        plt.figure(figsize=(12, 5))
         X_val = Utilities.ensure_numpy_array(X_val)[:, column_index]
-        plt.plot(X_val, color='blue', label='Validation Data', zorder=2)
+        plt.plot(X_val, color='blue', label='Sinal', zorder=2)
         plt.scatter(
             np.where(y_pred_val == 1)[0],
             X_val[y_pred_val == 1],
             color='orange',
             s=s,
-            label='Anomalies (Predicted)',
+            label='Anomalias (Predição)',
             zorder=3,
         )
 
@@ -106,13 +111,14 @@ class CustomIsolationForest:
             where=y_val == 1,
             color='red',
             alpha=0.3,
-            label='True Anomalies',
+            label='Anomalias (Real)',
             zorder=1,
         )
 
-        plt.xlabel('Sample Index')
-        plt.ylabel('Value')
-        plt.legend()
+        plt.xlabel('Índice')
+        plt.ylabel('Aceleração [a.u.]')
+        plt.legend(loc='upper right')
+        plt.grid(True)
         plt.title('Anomaly Detection with Isolation Forest')
         plt.show()
 
