@@ -269,8 +269,8 @@ class CustomProcessor:
         df.reset_index(drop=True, inplace=True)
         # Mantendo apenas as colunas desejadas e removendo colunas com sufixos indesejados
         df = df[[col for col in df.columns if col in ["X_axis", "Y_axis", "Z_axis"] or not col.endswith(("_x", "_y", "_z"))]]
-
-
+        # Drop duplicated columns if any
+        df = df.loc[:, ~df.columns.duplicated()]
         return df
 
     def filter_and_process(

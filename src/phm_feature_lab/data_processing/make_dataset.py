@@ -6,15 +6,10 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from . import loader
+from phm_feature_lab.utils.logger import Logger 
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler()  # Outputs to the console only
-    ]
-)
+logger = Logger().get_logger()
+
 
 class DataTransform:
     """
@@ -124,8 +119,8 @@ class DataTransform:
         dfs, file_count = self.load_data()
         transformed_df = self.transform_data(dfs)
         file_path = self.save_to_parquet(transformed_df, path_to_save_parquet)
-        logging.info(f"Number of files read: {file_count}")
-        logging.info(f"Number of unique codes: {transformed_df['Unique_Code'].nunique()}")
+        logger.info(f"Number of files read: {file_count}")
+        logger.info(f"Number of unique codes: {transformed_df['Unique_Code'].nunique()}")
         return file_path
 
 
@@ -179,7 +174,7 @@ class UniqueCodeCorrector:
         df = pd.read_parquet(path_to_dataset)
         corrected_df = self.correct_unique_code(df, machine)
         self.save_to_parquet(corrected_df, path_to_save_parquet)
-        logging.info(f"Number of unique codes for {machine}: {corrected_df['Unique_Code'].nunique()}")
+        logger.info(f"Number of unique codes for {machine}: {corrected_df['Unique_Code'].nunique()}")
 
 
 class DataSplitter:

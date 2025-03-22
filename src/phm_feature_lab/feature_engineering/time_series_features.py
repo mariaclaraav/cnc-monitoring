@@ -1,5 +1,5 @@
 import pandas as pd
-from phm_feature_lab.utils.feature_engineering.creation import FeatureCreationUtils
+from phm_feature_lab.feature_engineering.creation import FeatureCreationUtils
 from tqdm import tqdm
 
 class TimeSeriesFeatures:

@@ -1,5 +1,5 @@
 
-from phm_feature_lab.utils.filter.filter import perform_fft
+from phm_feature_lab.filter import perform_fft
 from phm_feature_lab.utils.utilities import order_unique_code
 
 import numpy as np

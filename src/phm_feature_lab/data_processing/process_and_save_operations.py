@@ -5,7 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from phm_feature_lab.features.custom_processor import CustomProcessor
-from phm_feature_lab.features.build_features import TimeSeriesProcessor
+from phm_feature_lab.feature.build_features import TimeSeriesProcessor
 from phm_feature_lab.utils.logger import Logger
 
 logger = Logger().get_logger()

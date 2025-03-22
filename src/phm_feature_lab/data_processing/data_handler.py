@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from typing import List, Optional, Tuple
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from phm_feature_lab.utils.data_processing.splitting import SplitData
+from phm_feature_lab.data_processing.splitting import SplitData
 from phm_feature_lab.utils.logger import Logger 
 
 logger = Logger().get_logger()

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
 from scipy.stats import probplot
 import pandas as pd
-from phm_feature_lab.utils.filter.filter import perform_fft
+from phm_feature_lab.frequency.filter import perform_fft
 
 class PlotIMFs:
     def __init__(self, n_imfs: int = 5, color_map: str = 'viridis') -> None:

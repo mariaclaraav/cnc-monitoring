@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
-from phm_feature_lab.utils.frequency.get_frequency import FrequencyProcessor
+from phm_feature_lab.frequency.get_frequency import FrequencyProcessor
 
 #REF:  Refactor the code, make it cleaner and more readable
 class FrequencyAnalyzer:

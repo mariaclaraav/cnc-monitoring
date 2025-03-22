@@ -4,7 +4,7 @@ import pywt
 import emd
 from tqdm import tqdm
 from statsmodels.tsa.seasonal import seasonal_decompose
-from phm_feature_lab.utils.filter.filter import bandpass_filter
+from phm_feature_lab.filter.filter import bandpass_filter
 
 
 

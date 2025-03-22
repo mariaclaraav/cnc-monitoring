@@ -3,7 +3,7 @@ import pandas as pd
 from tqdm import tqdm
 from typing import List, Tuple
 import logging
-from phm_feature_lab.utils.data_processing.data_handler import DataHandler
+from phm_feature_lab.data_processing.data_handler import DataHandler
 
 class OperationProcessor:
     def __init__(self, operations: List[str], 

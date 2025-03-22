@@ -405,3 +405,50 @@ def plot_scatter_matrix(df, machine, process, cols, sample_frac=0.05, random_sta
 
     # Display the figure
     fig.show()
+    
+    
+def plot_scatter_matrix(df, machine, process, cols, sample_frac=0.05, random_state=0):
+    """
+    Plots a scatter matrix for specified columns for a given process and machine in a DataFrame,
+    highlighting different 'Unique_Code' values.
+
+    Parameters:
+    - df: DataFrame containing the data.
+    - machine: String representing the machine to filter by.
+    - process: String representing the process to filter by.
+    - cols: List of column names to include in the scatter matrix.
+    - sample_frac: Fraction of the DataFrame to sample (default 0.05).
+    - random_state: Seed for random number generation (default 0).
+    """
+
+    # Filter data by machine and process
+    df_filtered = df[(df["Machine"] == machine) & (df["Process"] == process)]
+
+    # Ensure only columns that exist in the DataFrame are used
+    cols = [col for col in cols if col in df_filtered.columns]
+
+    # Determine the column order for 'Unique_Code'
+    unique_code_order = df_filtered["Unique_Code"].unique()
+
+    # Create the scatter matrix
+    fig = px.scatter_matrix(
+        df_filtered.sample(frac=sample_frac, random_state=random_state),
+        dimensions=cols,
+        color="Unique_Code",
+        category_orders={"Unique_Code": list(unique_code_order)},
+    )
+
+    # Update layout
+    fig.update_layout(
+        width=1400,
+        height=1000,
+        legend_title_font_size=18,
+        legend_title_text="Código do processo",
+    )
+
+    # Update trace characteristics
+    fig.update_traces(marker=dict(size=2), diagonal_visible=False, showupperhalf=False)
+
+    # Display the figure
+    fig.show()
+

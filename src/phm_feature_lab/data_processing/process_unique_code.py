@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from tqdm import tqdm
 from typing import List, Optional
-from phm_feature_lab.features.time_series_features import TimeSeriesFeatures
+from phm_feature_lab.feature_engineering.time_series_features import TimeSeriesFeatures
 from phm_feature_lab.features.custom_processor import CustomProcessor
 from phm_feature_lab.utils.logger import Logger
 

@@ -1,7 +1,7 @@
 import pandas as pd
 import logging
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from phm_feature_lab.utils.data_processing.data_scaler import DataScaler
+from phm_feature_lab.data_processing.data_scaler import DataScaler
 from phm_feature_lab.utils.logger import Logger 
 
 logger = Logger().get_logger()
