@@ -4,6 +4,7 @@ import pandas as pd
 from typing import List, Tuple, Union, Optional, Dict
 from phm_feature_lab.utils.logger import Logger 
 from phm_feature_lab.utils.utils_contants import UtilsConstants
+from phm_feature_lab.utils.utilities import Utilities
 
 logger = Logger().get_logger()
 
@@ -35,8 +36,8 @@ class CustomDataSplitter:
         Returns:
             None
         """
-        self.__df = df
-        self.__features = features
+        self.__df = self.__order_dataframe(df)
+        self.__features = [s.lower() for s in features]
         self.__include_codes = include_codes
         self.__n_val = self.__validate_n_val(n_val)
 
@@ -47,6 +48,15 @@ class CustomDataSplitter:
         # Create masks using the provided parameters
         self.__train_mask = self._create_mask(**train_split_param)
         self.__test_mask = self._create_mask(**test_split_param)
+        
+    def __order_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
+        """ Order the DataFrame by 'Unique_Code' and 'Time'
+        Args:
+            df (pd.DataFrame): DataFrame to be ordered.
+        Returns:
+            pd.DataFrame: Ordered DataFrame.
+        """
+        return Utilities.order_unique_code(df)
 
     def _create_mask(
         self,
@@ -66,18 +76,18 @@ class CustomDataSplitter:
         """
 
         # Create mask for specified periods
-        period_mask = self.__df["Period"].isin(periods)
+        period_mask = self.__df["period"].isin(periods)
 
         # Create mask for specified machine types (if provided)
         machine_mask = (
-            self.__df["Machine"].isin(machine_types)
+            self.__df["machine"].isin(machine_types)
             if machine_types
             else pd.Series(True, index=self.__df.index)
         )
 
         # Create mask based on 'Label' column if 'normal' is True
         label_mask = (
-            self.__df["Label"] == 0
+            self.__df["label"] == 0
             if normal
             else pd.Series(True, index=self.__df.index)
         )
@@ -97,7 +107,7 @@ class CustomDataSplitter:
         Raises:
             ValueError: If n_val is not between 0 and 1 (exclusive).
         """
-        if not 0 < n_val < 1:
+        if not 0 <= n_val < 1:
             raise ValueError(
                 f"n_val must be between 0 and 1 (exclusive), but got {n_val}."
             )
@@ -202,10 +212,10 @@ class CustomDataSplitter:
             return int(match.group(1)) if match else None
 
         df = df.copy()
-        df["Unique_Code"] = pd.Categorical(
-            df["Unique_Code"], categories=code_order, ordered=True
+        df["unique_code"] = pd.Categorical(
+            df["unique_code"], categories=code_order, ordered=True
         )
-        df_sorted = df.sort_values(by=["Unique_Code", "Time"])
+        df_sorted = df.sort_values(by=["unique_code", "time"])
         return df_sorted
 
     def __get_codes(self, mask: pd.Series) -> List[str]:
@@ -221,7 +231,7 @@ class CustomDataSplitter:
             ValueError: If 'Unique_Code' column is missing.
         """
         try:
-            codes = self.__df[mask].Unique_Code.unique()
+            codes = self.__df[mask].unique_code.unique()
             return sorted(codes, key=CustomDataSplitter.extract_keys)
         except KeyError:
             raise ValueError(
@@ -253,7 +263,7 @@ class CustomDataSplitter:
         Returns:
             pd.Series: Boolean mask for the specified codes.
         """
-        return CustomDataSplitter.split_mask(self.__df["Unique_Code"].values, codes)
+        return CustomDataSplitter.split_mask(self.__df["unique_code"].values, codes)
 
     def __get_dataframe(self, mask, codes):
         """ Get a sorted DataFrame based on a mask and code order.
@@ -278,7 +288,7 @@ class CustomDataSplitter:
             Tuple[pd.DataFrame, pd.Series]: Tuple of (features, labels).
         """
         X = df[self.__features].reset_index(drop=True)
-        y = df["Label"].reset_index(drop=True)
+        y = df["label"].reset_index(drop=True)
         return X, y
 
     def __handle_unique_code(self, df: pd.DataFrame) -> pd.Series:
@@ -291,7 +301,7 @@ class CustomDataSplitter:
             pd.Series: Series of unique codes if include_codes is True, else None.
         """
         if self.__include_codes:
-            return df["Unique_Code"].astype(str).reset_index(drop=True)
+            return df["unique_code"].astype(str).reset_index(drop=True)
         else:
             return None
 
