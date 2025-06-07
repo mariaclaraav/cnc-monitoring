@@ -50,7 +50,7 @@ class OptunaRetrainer:
             # Single-objective study
             if trial_index is not None:
                 logger.warning("trial_index is ignored for single-objective studies.")
-            best_params = self.study_.best_params
+            params = self.study_.best_params
         else:
             # Multi-objective study: Use the specified trial from the Pareto front
             if not self.study_.trials:
@@ -283,9 +283,14 @@ class IsolationForestModel:
         study = IsolationForestModel.load_study(storage_path, study_name)
 
         retrainer = OptunaRetrainer(study, self.__X_train)
-        retrainer.train(trial_index)
+        if trial_index:
+            retrainer.train(trial_index)
+        else:
+            retrainer.train()
         
         return retrainer # Retorna o retrainer, que é um objeto da classe OptunaRetrainer
+    
+    
 
     def __evaluate_and_plot(
         self,
@@ -375,7 +380,7 @@ class IsolationForestModel:
         metrics: List[str],
         n_decrement: int,
         label_name: str,
-        trial_indices: Dict[str, int],  # Dicionário com {study_name: trial_index}
+        trial_indices: Optional[Dict[str, int]] = None,  # Dicionário com {study_name: trial_index}
         model_storage_path: Optional[str] = None,
         column_index: int = 1,
         n: Optional[float] = None,
@@ -410,11 +415,14 @@ class IsolationForestModel:
 
             try:
                 study = IsolationForestModel.load_study(storage_path, study_name)  # Chamada estática
-                trial_index = trial_indices.get(study_name)
+                
+                trial_index = None  # Initialize trial_index to None
+                if trial_indices and study_name in trial_indices:
+                    trial_index = trial_indices[study_name]
+                    logger.info(f"Using provided trial index {trial_index} for study '{study_name}'.")
+                else:
+                     logger.info(f"No trial index provided or found in `trial_indices` for study '{study_name}'. Using best trial instead.")
 
-                if trial_index is None:
-                    logger.warning(f"No trial index provided for study '{study_name}'. Skipping.")
-                    continue
 
                 # Retrain the model
                 retrainer = self.__retrain_with_selected_trial(storage_path, study_name, trial_index)
@@ -427,32 +435,17 @@ class IsolationForestModel:
                 # Evaluate and plot
                 y_pred, metrics_dict = self.__evaluate_and_plot(retrainer, study_name, column_index, label_name, figsize)
                 y_pred_dict[f"operation_{i}"] = y_pred
+                if trial_index is not None:
+                    operation_results = {"num_operations": i, "best_params": study.trials[trial_index].params, **metrics_dict}
+                else:
+                    operation_results = {"num_operations": i, "best_params": study.best_params, **metrics_dict}
 
-                operation_results = {"num_operations": i, "best_params": study.trials[trial_index].params, **metrics_dict}
                 self.__results.append(operation_results)
 
-                if n is not None:
-                    num_samples = int(len(self.__X_test) * n)
-                    X_partial = self.__X_test[:num_samples]
-                    y_partial = self.__y_test[:num_samples]
-
-                    y_pred_partial, metrics_partial = retrainer.predict(X_partial, y_partial)
-                    logger.info(f"Partial prediction with {n * 100:.0f}% of samples:")
-                    for metric_name, metric_value in metrics_partial.items():
-                        logger.info(f"{metric_name}: {metric_value:.4f}")
-
-                    retrainer.plot_anomalies(
-                        X_partial,
-                        y_partial,
-                        y_pred_partial,
-                        column_index=column_index,
-                        data=f"{n * 100:.0f}% of Test",
-                        label_name=label_name,
-                        figsize=figsize,
-                    )
 
             except Exception as e:
-                logger.error(f"Error processing study '{study_name}': {e}")
+                logger.error(f"Error processing study '{study_name}': {e}", exc_info=True)  # Capture traceback
                 continue
+
 
         return self.__results, y_pred_dict

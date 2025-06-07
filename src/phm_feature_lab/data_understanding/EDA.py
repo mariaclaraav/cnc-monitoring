@@ -1137,6 +1137,7 @@ def plot_correlation_matrix(
     plt.yticks(fontsize=12)
     
     cbar = plt.gcf().axes[-1]
+    plt.grid(False)
     cbar.tick_params(labelsize=12)
     plt.title(title, size=16)
     plt.show()

@@ -95,6 +95,18 @@ def bandpass_filter(data, lowcut, highcut, fs, order=4):
     y = filtfilt(b, a, data)
     return y
 
+# Design the Butterworth low-pass filter
+def butter_lowpass(cutoff, fs, order=4):
+    nyquist = 0.5 * fs
+    normal_cutoff = cutoff / nyquist
+    b, a = butter(order, normal_cutoff, btype='low', analog=False)
+    return b, a
+
+def lowpass_filter(data, cutoff, fs, order=4):
+    b, a = butter_lowpass(cutoff, fs, order=order)
+    y = filtfilt(b, a, data)
+    return y
+
 def perform_fft(signal, fs):
     N = len(signal)
     
@@ -109,3 +121,24 @@ def perform_fft(signal, fs):
     y_fft = 2.0/N * np.abs(yf)
     
     return x_fft, y_fft
+
+def plot_fft(freqs, amps, label, harmonics=None, ax=None, peaks=None):
+   
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(8, 4), dpi=150)
+
+    ax.plot(freqs, amps, label=label, linewidth=1)
+    if peaks:
+        ax.plot(freqs[peaks], amps[peaks], 'bo', label='Picos detectados')
+    ax.set_title(f'FFT - {label}')
+    ax.set_ylabel('Amplitude')
+    ax.grid(True, linestyle='--', alpha=0.7)
+
+    if harmonics:
+        for h in harmonics:
+            ax.axvline(h, linestyle='--', alpha=0.5, color='red')
+            ax.text(h + freqs.max()*0.005, amps.max()*0.1,
+                    f'{h} Hz', color='red', fontsize=8)
+
+    ax.legend()
+    return ax

@@ -10,7 +10,7 @@ axes.labelsize: 18               # Set the font size of the axes labels
 axes.grid: True                  # Enable grid on axes
 
 # Lines settings
-lines.linewidth: 1.0             # Set the width of the lines
+lines.linewidth: 1.5             # Set the width of the lines
 lines.markersize: 6              # Set the size of the markers
 
 # Figure settings

@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -8,7 +8,7 @@ from PIL import Image
 class ImageProcessing:
     
     @staticmethod
-    def get_files(path_to_files, size=(224, 224), mode='RGB'):
+    def get_files(path_to_files, mode='RGB'):
         """
         Loads and processes the image files from the specified path.
         
@@ -40,7 +40,8 @@ class ImageProcessing:
             try:
                 img = Image.open(os.path.join(path_to_files, file))
                 img = img.convert(mode)  # Convert to RGB
-                img = np.asarray(img.resize(size))
+                #img = np.asarray(img.resize(size))
+                img = np.asarray(img)  # Convert to numpy array
                 imgs.append(img)
                 img_names.append(file)
             except Exception as e:
@@ -79,8 +80,8 @@ class ImageProcessing:
         img_info = pd.DataFrame(img_names, columns=['image_name'])
 
         # Generate the Unique_Code by removing the suffixes from the image name (X, Y, Z)
-        img_info['Unique_Code'] = img_info['image_name'].str.replace(r'_(X|Y|Z)\.png$', '', regex=True)
-
+        img_info['Unique_Code'] = img_info['image_name'].str.rsplit('_', n=2).str[0]
+        
         # Map labels based on Unique_Code using a safe mapping approach
         label_mapping = Label.set_index('Unique_Code')['Label'].to_dict()
         img_info['Label'] = img_info['Unique_Code'].map(label_mapping).fillna('Unknown').astype(str)  # Default to 'Unknown' if no match

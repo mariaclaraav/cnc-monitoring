@@ -22,8 +22,8 @@ CURRENT_DIR = os.getcwd()
 SAVING_PATH = os.path.join(CURRENT_DIR, 'data', 'processed', 'features')
 DATA_PATH = os.path.join(CURRENT_DIR, 'data', 'processed', 'ETL', 'ETL_final.parquet')
 
-OPERATIONS = ['OP06']
-FEATURE_TYPES = ['wpd']
+OPERATIONS = ['OP04', 'OP06', 'OP07']
+FEATURE_TYPES = ['dwt']
 WINDOW_SIZE = [27, 50, 100, 200, 300, 400, 500]
 SAMPLING_RATE = 2000
 STEP_SIZE = 1
@@ -37,7 +37,7 @@ def main() -> None:
             window_size= ws,
             step_size=STEP_SIZE,
             min_periods=MIN_PERIODS,
-            sampling_rate=SAMPLING_RATE
+            sampling_rate=SAMPLING_RATE,
         )
         operation_processor = ProcessUniqueCode(processor, SAVING_PATH)
 
@@ -48,7 +48,7 @@ def main() -> None:
         
         print(f"OPERATIONS: {OPERATIONS}, FEATURE_TYPES: {FEATURE_TYPES}")
 
-        operation_processor.process_and_save(df=df, operations=OPERATIONS, feature_types=FEATURE_TYPES, extra_info = 'wavelet')
+        operation_processor.process_and_save(df=df, operations=OPERATIONS, wavelet = 'db14', feature_types=FEATURE_TYPES, extra_info = 'wavelet_db14')
         
         # Clean up
         del df

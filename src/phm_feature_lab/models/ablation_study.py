@@ -153,16 +153,24 @@ class AblationStudy:
          # Define a direção de otimização
         if len(self.metrics) == 1:
             direction = "maximize"  # Single-objective
+            IF_study = create_study(
+                study_name=study_name,
+                direction=direction,
+                sampler=self.sampler,
+                pruner=self.pruner,
+                storage=f'sqlite:///{study_path}',
+                load_if_exists=True
+            )
         else:
             direction = ["maximize"] * len(self.metrics)  # Multiobjetivo
-        IF_study = create_study(
-            study_name=study_name,
-            directions=direction,
-            sampler=self.sampler,
-            pruner=self.pruner,
-            storage=f'sqlite:///{study_path}',
-            load_if_exists=True
-        )
+            IF_study = create_study(
+                study_name=study_name,
+                directions=direction,
+                sampler=self.sampler,
+                pruner=self.pruner,
+                storage=f'sqlite:///{study_path}',
+                load_if_exists=True
+            )
         IF_study.optimize(
             lambda trial: ObjectiveFunctions.IsolationForest(trial, X_train_subset, X_selected, y_selected, metrics=self.metrics),
             n_trials=self.n_trials,

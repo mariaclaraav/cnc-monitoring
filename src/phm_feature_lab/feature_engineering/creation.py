@@ -4,12 +4,44 @@ import pywt
 import emd
 from typing import Callable, Dict, List, Tuple
 from scipy.signal import butter, filtfilt
-from phm_feature_lab.frequency.filter import perform_fft
+from phm_feature_lab.frequency.filter import perform_fft, bandpass_filter, highpass_filter, lowpass_filter
 
 class FeatureCreationUtils:
     """Utility class for feature extraction from time series data, including
     statistical, energy, filter-based, and wavelet decomposition features.
     """
+    
+    def _apply_transform(data, transform_func, **kwargs):
+        """
+        Applies a transformation function to a pandas Series or NumPy array
+        and returns the result in the same format as the input.
+
+        Args:
+            data (pd.Series or np.ndarray): 
+                Input data to be transformed.
+            transform_func (Callable): 
+                Function that performs the transformation. Must accept a NumPy array as input.
+            **kwargs: 
+                Additional keyword arguments to be passed to `transform_func`.
+
+        Returns:
+            pd.Series or np.ndarray: 
+                Transformed data. If the input was a Series, returns a Series with the same name.
+                If the input was a NumPy array, returns a NumPy array.
+        """
+        if isinstance(data, pd.Series):
+            name = data.name
+            data_array = data.to_numpy()
+        else:
+            name = None
+            data_array = data
+
+        transformed = transform_func(data_array, **kwargs)
+
+        if name is not None:
+            return pd.Series(transformed, name=name)
+        else:
+            return transformed
 
     @staticmethod
     def _rolling_apply(
@@ -169,6 +201,7 @@ class FeatureCreationUtils:
             'equal_ratio': FeatureCreationUtils._equal_ratio,
             'over_avg': FeatureCreationUtils._over_avg
         }
+        data = FeatureCreationUtils._apply_transform(data, transform_func=highpass_filter, fs=2000, cutoff=50, order=4)
         df = FeatureCreationUtils._rolling_apply(data, window_size, step_size, min_periods, funcs)
         del funcs  # Free memory used by function dictionary
         return df
@@ -216,6 +249,7 @@ class FeatureCreationUtils:
             'kurt_freq': lambda x: calculate_metrics(x)['kurt_freq'],
             'max_freq': lambda x: calculate_metrics(x)['max_freq']
         }
+        data = FeatureCreationUtils._apply_transform(data, transform_func=highpass_filter, fs=2000, cutoff=50, order=4)
         
         results = FeatureCreationUtils._rolling_apply(data, window_size, step_size, min_periods, funcs)
         
@@ -264,6 +298,7 @@ class FeatureCreationUtils:
         Returns:
             pd.DataFrame: DataFrame with energy entropy and normalized energy features.
         """
+        data = FeatureCreationUtils._apply_transform(data, transform_func=highpass_filter, fs=2000, cutoff=50, order=4)
         funcs = {
             'energy_entropy': FeatureCreationUtils._entropy_of_energy,
             'norm_energy': lambda x: np.sum(x ** 2) / len(x)
@@ -334,7 +369,7 @@ class FeatureCreationUtils:
     @staticmethod
     def discrete_wavelet_decomposition(
         data: pd.Series, 
-        w: str = 'db14', 
+        w: str = 'bior2.8', 
         level: int = 3
     ) -> pd.DataFrame:
         """Performs discrete wavelet decomposition on a time series
@@ -347,6 +382,7 @@ class FeatureCreationUtils:
         Returns:
             pd.DataFrame: DataFrame containing approximation and detail coefficients
         """
+        data = FeatureCreationUtils._apply_transform(data, transform_func=highpass_filter, fs=2000, cutoff=50, order=4)
         if len(data) % 2 != 0:
             data = data[:-1]
         w = pywt.Wavelet(w)
@@ -385,7 +421,7 @@ class FeatureCreationUtils:
     @staticmethod
     def wavelet_packet_decomposition(
         data: pd.Series, 
-        w: str = 'db14', 
+        w: str = 'sym2', 
         level: int = 3
     ) -> pd.DataFrame:
         """Performs wavelet packet decomposition on a time series
@@ -398,36 +434,35 @@ class FeatureCreationUtils:
         Returns:
             pd.DataFrame: DataFrame containing coefficients of each node at the specified level
         """
-        if len(data) % 2 != 0:
-            data = data[:-1]
-        
-        wp = pywt.WaveletPacket(data=data, wavelet=w, mode='symmetric', maxlevel=level)
-        
-        # Initialize lists to store the reconstructed coefficients
-        reconstructed_coeffs = []
-        node_labels = []
+        original_name = data.name 
+        signal = data.values
+        wp = pywt.WaveletPacket(data=signal, wavelet=w, mode='symmetric', maxlevel=level)
 
-        # Reconstruct the coefficients for each node
-        nodes = [node.path for node in wp.get_level(level, 'freq')]
+        # Obter todos os nós do nível desejado
+        nodes = wp.get_level(max_level, order='freq')
+        node_paths = [node.path for node in nodes]
         
-        for node in nodes:
-            coeff = wp[node].data
-            reconstructed_coeff = pywt.upcoef('a', coeff, w, level=level, take=len(data))
-            reconstructed_coeffs.append(reconstructed_coeff)
-            node_labels.append(f'node_{node}')
-        
-        # Convert reconstructed coefficients to DataFrame without transposing
-        df_coef = pd.DataFrame(reconstructed_coeffs).T
-        df_coef.columns = node_labels
+        reconstructed_dict = {}
 
-        del reconstructed_coeffs, node_labels
+        for i, path in enumerate(node_paths):
+            # Nova árvore com zeros
+            new_wp = pywt.WaveletPacket(data=None, wavelet=wavelet, mode='symmetric')
+            for p in node_paths:
+                new_wp[p] = np.zeros_like(wp[p].data)
+            new_wp[path] = wp[path].data
+
+            # Reconstrói o sinal do nó
+            rec = new_wp.reconstruct(update=False)
+            rec = rec[:len(signal)]  # garante tamanho correto
+            
+            reconstructed_dict[path] = rec
+            
+        df_reconstructed = pd.DataFrame(reconstructed_dict)
+        df_reconstructed[original_name] = data.values
         
-        # Create the final DataFrame
-        df_final = pd.concat([data.reset_index(drop=True), df_coef], axis=1)
-        df_final.columns = [data.name] + df_coef.columns.tolist()
-        
-        del df_coef
-        return df_final
+        cols = [original_name] + [c for c in df_reconstructed.columns if c != original_name]
+        df_reconstructed = df_reconstructed[cols]
+        return df_reconstructed
     
     @staticmethod
     def calculate_jerk(
@@ -445,6 +480,7 @@ class FeatureCreationUtils:
             pd.DataFrame: DataFrame containing the original data (trimmed) and 
                 the calculated jerk values.
         """
+        data = FeatureCreationUtils._apply_transform(data, transform_func=highpass_filter, fs=2000, cutoff=50, order=4)
         dt = 1 / fs
         jerk = (data.shift(-1) - data.shift(1)) / (2 * dt)
         
@@ -472,9 +508,15 @@ class FeatureCreationUtils:
             pd.DataFrame: DataFrame containing the original data and each computed 
                 IMF as separate columns.
         """
+        data = FeatureCreationUtils._apply_transform(data, transform_func=highpass_filter, fs=2000, cutoff=50, order=4)
+        
+        # Calculate IMFs using EMD
+        if not isinstance(data, np.ndarray):
+            data = data.to_numpy()
+
         # Calculate IMFs using EMD
         imfs = emd.sift.iterated_mask_sift(
-            data.to_numpy(), sample_rate=2000, max_imfs=num_imfs
+            data, sample_rate=2000, max_imfs=num_imfs
         )
         
         # Stack the original data and IMFs into a single array

@@ -120,7 +120,7 @@ class CustomProcessor:
         
         return df
     def process_features(
-        self, df_filtered: pd.DataFrame, feature_types: List[str], filter_list: Optional[List] = None
+        self, df_filtered: pd.DataFrame, wavelet: str, feature_types: List[str], filter_list: Optional[List] = None
     ) -> List[pd.DataFrame]:
         """Process the time series features.
 
@@ -146,7 +146,7 @@ class CustomProcessor:
             start_time = time.time()
             
             if feature_type in ['dwt', 'wpd']:
-                data = self.processor.process_time_series(df = df_filtered, feature_type=feature_type, wavelet='db14', level=3)
+                data = self.processor.process_time_series(df = df_filtered, feature_type=feature_type, wavelet = wavelet, level=3)
                 
             elif feature_type == 'filter':               
                 for col in ['X_axis', 'Y_axis', 'Z_axis']:
@@ -274,7 +274,7 @@ class CustomProcessor:
         return df
 
     def filter_and_process(
-        self, df: pd.DataFrame, operation: str, feature_types: List[str], filter_list: Optional[List] = None
+        self, df: pd.DataFrame, operation: str, feature_types: List[str], wavelet: str, filter_list: Optional[List] = None
     ) -> pd.DataFrame:
         """Filter the DataFrame and process time series features.
 
@@ -287,7 +287,7 @@ class CustomProcessor:
             pd.DataFrame: The processed and cleaned DataFrame.
         """
         df_filtered = self.filter_dataframe(df, operation)
-        processed_data = self.process_features(df_filtered, feature_types, filter_list)
+        processed_data = self.process_features(df_filtered = df_filtered, feature_types = feature_types, wavelet = wavelet, filter_list = filter_list)
         merged_data = self.merge_processed_data(processed_data)
         
         del df_filtered

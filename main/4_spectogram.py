@@ -3,18 +3,18 @@ import gc
 from tqdm import tqdm
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-from phm_feature_lab.features.custom_cwt import CustomCWT
+from phm_feature_lab.wavelet.custom_cwt import CustomCWT
 from phm_feature_lab.utils.logger import Logger
-from phm_feature_lab.utils.data_processing.data_scaler import DataScaler
-from phm_feature_lab.utils.data_processing.operation_filter import OperationFilter
-from phm_feature_lab.utils.data_processing.load_files import LoadFiles
+from phm_feature_lab.data_processing.data_scaler import DataScaler
+from phm_feature_lab.data_processing.operation_filter import OperationFilter
+from phm_feature_lab.data_processing.load_files import LoadFiles
 
 logger = Logger().get_logger()
 
 
 # Constants and configuration
 CURRENT_DIR = os.getcwd()
-SAVING_PATH = os.path.join(CURRENT_DIR, "data", "processed", "spectogram")
+SAVING_PATH = os.path.join(CURRENT_DIR, "data", "processed", "spectogram_resized")
 DATA_PATH = os.path.join(CURRENT_DIR, "data", "processed", "ETL", "ETL_final.parquet")
 
 os.makedirs(SAVING_PATH, exist_ok=True)
@@ -22,7 +22,7 @@ os.makedirs(SAVING_PATH, exist_ok=True)
 # Parameters
 FREQUENCIES = [600, 100]  # Desired frequencies
 SAMPLE_RATE = 2000  # Sampling rate
-OPERATIONS = ["OP06", "OP07"]
+OPERATIONS = ["OP04"]
 COLUMNS = ["Time", "X_axis", "Y_axis", "Z_axis", "Process", "Unique_Code"]
 WAVELET = "cmor0.5-1.5"
 
@@ -31,7 +31,7 @@ WAVELET = "cmor0.5-1.5"
 def main() -> None:
 
     cwt_transform = CustomCWT(
-        frequencies=FREQUENCIES, wavelet=WAVELET, sampling_rate=SAMPLE_RATE
+        frequencies=FREQUENCIES, wavelet=WAVELET, sampling_rate=SAMPLE_RATE, norm = False
     )
 
     # Load the data
@@ -41,7 +41,7 @@ def main() -> None:
     op_filter = OperationFilter(df)
     df = op_filter.filter(COLUMNS, OPERATIONS)
 
-    scale = DataScaler(scaler=StandardScaler(), exclude_columns=["Time", "Unique_Code"]
+    scale = DataScaler(scaler=MinMaxScaler(), exclude_columns=['Time', 'Unique_Code']
     )
 
     for op in tqdm(OPERATIONS, desc="Processing operations"):
@@ -59,7 +59,7 @@ def main() -> None:
                 signal = subset[axis]
                 path = os.path.join(SAVING_PATH, f"{op}", f"{code}_{axis}.png")
                 cwt_transform.save_cwt_img(
-                    time=subset.Time, signal=signal.values, save_path=path
+                    time=subset.Time, signal=signal.values, save_path=path, figsize = (5, 5)
                 )
             del subset
             gc.collect()

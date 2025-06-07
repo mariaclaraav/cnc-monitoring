@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from typing import List, Type, Any
+from typing import List, Type, Any, Optional
 
 class Utilities:
     """ A utility class for performing common DataFrame operations"""
@@ -184,3 +184,73 @@ class Utilities:
         if np.any(np.isnan(image)) or np.any(np.isinf(image)):
             logger.error("Invalid values detected: The image contains NaN or infinite values.")
             raise ValueError("The image must not contain NaN or infinite values.")
+        
+    @staticmethod
+    def get_anomaly_ratio_by_unique_code(y: np.ndarray, unique_codes: np.ndarray) -> pd.DataFrame:
+        """
+        Calculates the overall percentage of y==1 (anomalies) vs. y==0 (normal)
+        for each unique Unique_Code.
+
+        Args:
+            y (np.ndarray): Labels (0 for normal, 1 for anomaly) - must be in the same order as unique_codes.
+            unique_codes (np.ndarray): Array of unique Unique_Code values.
+        Returns:
+            pd.DataFrame: DataFrame with Unique_Code as index and columns for % Normal and % Anomaly.
+        """
+        # Create a Pandas DataFrame for easier manipulation
+        df = pd.DataFrame({'Unique_Code': unique_codes, 'Label': y})
+
+        # Group by 'Unique_Code' and calculate the value counts of 'Label'
+        grouped = df.groupby('Unique_Code')['Label'].value_counts(normalize=True).unstack(fill_value=0)
+
+        # Calculate percentages and store in a dictionary
+        results = {}
+        for code in df['Unique_Code'].unique():
+            if code in grouped.index:
+                normal_percentage = grouped.loc[code, 0] * 100 if 0 in grouped.columns else 0
+                anomaly_percentage = grouped.loc[code, 1] * 100 if 1 in grouped.columns else 0
+                results[code] = {'% Normal': normal_percentage, '% Anomaly': anomaly_percentage}
+            else:
+                results[code] = {'% Normal': 0, '% Anomaly': 0} # Handle cases where Unique_Code is in y but not in X
+
+        # Convert to DataFrame
+        results_df = pd.DataFrame.from_dict(results, orient='index')
+        results_df.index.name = 'Unique_Code'
+
+        return results_df
+
+    @staticmethod
+    def evaluate_anomaly_prediction(y: np.ndarray, unique_codes: np.ndarray, true_labels: np.ndarray, anomaly_threshold: Optional[float] = None) -> None:
+        """
+        Calculates anomaly predictions based on anomaly ratios, compares them to true_labels, and prints the results.
+
+        Args:
+            y (np.ndarray): Predicted labels (0 for normal, 1 for anomaly) - must be in the same order as unique_codes.
+            unique_codes (np.ndarray): Array of unique Unique_Code values.
+            true_labels (np.ndarray): Array of true_labels (strings: 'Normal' or 'Anomaly') - must be in the same order as unique_codes.
+            anomaly_threshold (Optional[float]): The threshold percentage to consider a Unique_Code as an anomaly.
+                                                If None, the prediction is not performed, and only the anomaly percentage and true_label are printed.
+        """
+
+        # Calculate anomaly ratios
+        anomaly_results_df = Utilities.get_anomaly_ratio_by_unique_code(y, unique_codes)
+
+        # Create a DataFrame for true_labels
+        true_labels_df = pd.DataFrame({'Unique_Code': unique_codes, 'true_label': true_labels})
+        true_labels_df = true_labels_df.drop_duplicates(subset=['Unique_Code']).set_index('Unique_Code') # Ensure each Unique_Code has only one true_label
+
+        # Add the true_labels to the anomaly results DataFrame
+        anomaly_results_df['true_label'] = anomaly_results_df.index.map(true_labels_df['true_label']).astype(int)
+        anomaly_results_df['true_label'].replace([1, 0], ['Anomaly', 'Normal'], inplace=True)
+        anomaly_results_df.sort_values(by='% Anomaly', ascending=False, inplace=True)  
+        # Add a column indicating if the model predicts it to be an anomaly or not
+        if anomaly_threshold is not None:  # Conditionally add the 'Predicted Anomaly' column
+            anomaly_results_df['Predicted Anomaly'] = anomaly_results_df['% Anomaly'] > anomaly_threshold
+
+        # Print the results
+        for index, row in anomaly_results_df.iterrows():
+            if anomaly_threshold is not None:
+                predicted_anomaly = "Anomaly" if row['Predicted Anomaly'] else "Normal"
+                print(f"Unique_Code: {index}, % Anomaly: {row['% Anomaly']:.2f}%, Predicted: {predicted_anomaly}, true_label: {row['true_label']}")
+            else:
+                print(f"Unique_Code: {index}, % Anomaly: {row['% Anomaly']:.2f}%, true_label: {row['true_label']}")

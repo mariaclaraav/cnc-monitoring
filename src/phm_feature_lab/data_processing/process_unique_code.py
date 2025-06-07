@@ -31,7 +31,7 @@ class ProcessUniqueCode:
         self.saving_path = saving_path
         os.makedirs(saving_path, exist_ok=True)  # Ensure the directory exists
 
-    def process_and_save(self, df: pd.DataFrame, operations: List[str], feature_types: List[str], extra_info: Optional[str]=None) -> None:
+    def process_and_save(self, df: pd.DataFrame, operations: List[str], wavelet: str, feature_types: List[str], extra_info: Optional[str]=None) -> None:
         """
         Processes and saves data for each operation in the list.
 
@@ -46,7 +46,7 @@ class ProcessUniqueCode:
         for operation in tqdm(operations, desc='Processing Operations'):
             logger.info(f"Processing operation: {operation}")
             custom_processor = CustomProcessor(self.processor)
-            df_processed = custom_processor.filter_and_process(df, operation, feature_types)
+            df_processed = custom_processor.filter_and_process(df = df, operation = operation, wavelet=wavelet, feature_types=feature_types)
             if extra_info:
                 save_path = os.path.join(self.saving_path, f'{operation}_{extra_info}.parquet')
             else:

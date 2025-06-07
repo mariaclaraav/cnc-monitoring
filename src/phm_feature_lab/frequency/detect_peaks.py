@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.signal import find_peaks
-from phm_feature_lab.utils.filter.filter import perform_fft
+from phm_feature_lab.frequency.filter import perform_fft
 from typing import Optional, Tuple, List
 
 

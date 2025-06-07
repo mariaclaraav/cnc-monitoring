@@ -230,6 +230,23 @@ class DataSplitter:
             df.reset_index(drop=True, inplace=True)
             df.to_parquet(final_path)
 
+def encode_machine_column(df: pd.DataFrame, column_name: str = 'Machine', prefix: str = 'Machine') -> pd.DataFrame:
+    """
+    Aplica one-hot encoding à coluna especificada (ex: 'Machine') e converte os valores booleanos em binários (0 e 1).
+    
+    Parâmetros:
+    - df: DataFrame original
+    - column_name: nome da coluna categórica a ser codificada
+    - prefix: prefixo das colunas resultantes
+
+    Retorna:
+    - DataFrame com colunas one-hot codificadas e binarizadas
+    """
+    df_encoded = pd.get_dummies(df, columns=[column_name], prefix=prefix)
+    machine_cols = [col for col in df_encoded.columns if col.startswith(f'{prefix}_')]
+    df_encoded[machine_cols] = df_encoded[machine_cols].astype(int)
+    return df_encoded
+
 
 # import os
 # import time
